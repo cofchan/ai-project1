@@ -1,0 +1,94 @@
+spring:
+  application:
+    name: user-registration-system
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/registration_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+    open-in-view: false
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - email
+              - profile
+          github:
+            client-id: ${GITHUB_CLIENT_ID}
+            client-secret: ${GITHUB_CLIENT_SECRET}
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - user:email
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://www.googleapis.com/oauth2/v4/token
+            user-info-uri: https://www.googleapis.com/oauth2/v1/userinfo
+            user-name-attribute: email
+          github:
+            authorization-uri: https://github.com/login/oauth/authorize
+            token-uri: https://github.com/login/oauth/access_token
+            user-info-uri: https://api.github.com/user
+            user-name-attribute: login
+
+  web:
+    cors:
+      allowed-origins: http://localhost:5173, http://localhost:3000
+      allowed-methods: GET, POST, PUT, DELETE, OPTIONS
+      allowed-headers: "*"
+      allow-credentials: true
+      max-age: 3600
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+jwt:
+  secret: ${JWT_SECRET:your-secret-key-change-in-production-must-be-at-least-256-bits}
+  expiration: 86400000 # 24 hours in milliseconds
+
+app:
+  name: User Registration System
+  email-verification-expiry-hours: 24
+  password-reset-expiry-minutes: 60
+  frontend-url: http://localhost:5173
+
+logging:
+  level:
+    root: INFO
+    com.registration: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
