@@ -53,6 +53,36 @@ public class UserService {
     @Value("${app.password-reset-expiry-minutes:60}")
     private int passwordResetExpiryMinutes;
 
+        /**
+         * Generate and send a 6-digit code for email verification
+         */
+        public void sendEmailVerificationCode(String email) {
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new UserNotFoundException("User with email " + email + " not found"));
+            String code = generateSixDigitCode();
+            emailService.sendVerificationCodeEmail(user, code);
+            // Optionally, store the code in DB for later verification
+        }
+
+        /**
+         * Generate and send a 6-digit code for password reset
+         */
+        public void sendPasswordResetCode(String email) {
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new UserNotFoundException("User with email " + email + " not found"));
+            String code = generateSixDigitCode();
+            emailService.sendPasswordResetCodeEmail(user, code);
+            // Optionally, store the code in DB for later verification
+        }
+
+        /**
+         * Utility to generate a random 6-digit code
+         */
+        private String generateSixDigitCode() {
+            int code = (int)(Math.random() * 900000) + 100000;
+            return String.valueOf(code);
+        }
+
     /**
      * Register a new user
      */

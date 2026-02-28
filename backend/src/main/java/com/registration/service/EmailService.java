@@ -102,4 +102,56 @@ public class EmailService {
                 "Best regards,\n" +
                 "User Registration System";
     }
+
+        /**
+         * Send a 6-digit code for email verification
+         */
+        public void sendVerificationCodeEmail(User user, String code) {
+            try {
+                String content = "Hello " + user.getFullName() + ",\n\n" +
+                        "Your email verification code is: " + code + "\n\n" +
+                        "Enter this code to verify your email.\n\n" +
+                        "Best regards,\nUser Registration System";
+                if (mailSender != null) {
+                    SimpleMailMessage message = new SimpleMailMessage();
+                    message.setFrom(fromEmail);
+                    message.setTo(user.getEmail());
+                    message.setSubject("Email Verification Code - User Registration System");
+                    message.setText(content);
+                    mailSender.send(message);
+                    log.info("Verification code email sent successfully to: {}", user.getEmail());
+                } else {
+                    log.warn("Mail sender not configured. Verification code: {}", code);
+                }
+            } catch (Exception e) {
+                log.error("Failed to send verification code email to: {}", user.getEmail(), e);
+                throw new RuntimeException("Failed to send verification code email", e);
+            }
+        }
+
+        /**
+         * Send a 6-digit code for password reset
+         */
+        public void sendPasswordResetCodeEmail(User user, String code) {
+            try {
+                String content = "Hello " + user.getFullName() + ",\n\n" +
+                        "Your password reset code is: " + code + "\n\n" +
+                        "Enter this code to reset your password.\n\n" +
+                        "Best regards,\nUser Registration System";
+                if (mailSender != null) {
+                    SimpleMailMessage message = new SimpleMailMessage();
+                    message.setFrom(fromEmail);
+                    message.setTo(user.getEmail());
+                    message.setSubject("Password Reset Code - User Registration System");
+                    message.setText(content);
+                    mailSender.send(message);
+                    log.info("Password reset code email sent successfully to: {}", user.getEmail());
+                } else {
+                    log.warn("Mail sender not configured. Password reset code: {}", code);
+                }
+            } catch (Exception e) {
+                log.error("Failed to send password reset code email to: {}", user.getEmail(), e);
+                throw new RuntimeException("Failed to send password reset code email", e);
+            }
+        }
 }

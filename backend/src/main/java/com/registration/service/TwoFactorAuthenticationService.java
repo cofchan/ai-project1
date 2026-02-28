@@ -6,8 +6,8 @@ import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.HmacAlgorithms;
-import org.apache.commons.codec.digest.HmacUtils;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.KeyGenerator;
@@ -70,8 +70,10 @@ public class TwoFactorAuthenticationService {
             byte[] decodedSecret = BaseEncoding.base32().decode(secret);
             byte[] counterBytes = ByteBuffer.allocate(8).putLong(counter).array();
 
-            HmacUtils hmac = new HmacUtils(HmacAlgorithms.HMAC_SHA_1, decodedSecret);
-            byte[] hash = hmac.digest(counterBytes);
+            Mac mac = Mac.getInstance(ALGORITHM);
+            SecretKeySpec keySpec = new SecretKeySpec(decodedSecret, ALGORITHM);
+            mac.init(keySpec);
+            byte[] hash = mac.doFinal(counterBytes);
 
             // Dynamic truncation
             int offset = hash[hash.length - 1] & 0xf;
