@@ -355,7 +355,7 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Invalid email or code"));
 
-        if (!user.getIsTwoFAEnabled()) {
+        if (!Boolean.TRUE.equals(user.getIsTwoFAEnabled())) {
             throw new InvalidTokenException("2FA not enabled for this user");
         }
 
@@ -382,7 +382,7 @@ public class UserService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Invalid email or backup code"));
 
-        if (!user.getIsTwoFAEnabled()) {
+        if (!Boolean.TRUE.equals(user.getIsTwoFAEnabled())) {
             throw new InvalidTokenException("2FA not enabled for this user");
         }
 

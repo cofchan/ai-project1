@@ -48,13 +48,13 @@ psql -U postgres -d registration_db -f backend/src/main/resources/schema.sql
 
 ### 2. Configure Environment Variables
 
-Copy `.env.example` to `.env` and configure:
+Copy `.env.example` to `.env` and configure (Spring will automatically import this file when the app starts):
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` with:
+Edit `.env` with real values:
 - `MAIL_USERNAME`: Your email for sending verification/reset emails
 - `MAIL_PASSWORD`: Your email app-specific password
 - `GOOGLE_CLIENT_ID`: Google OAuth2 client ID
@@ -72,14 +72,40 @@ mvn clean install
 
 ### 4. Run the Application
 
-```bash
-# Development mode
-mvn spring-boot:run
+Before starting the app you must make the environment variables available to the JVM. The `.env` file created in step 2 is **not** loaded automatically by `mvn spring-boot:run`, so either export the values or source the file yourself.
 
-# Or package and run JAR
-mvn clean package
-java -jar target/user-registration-system-1.0.0.jar
+Example using a Unix shell:
+
+```bash
+# from project root
+cp .env.example .env          # if not done already
+# load every variable in .env
+set -a
+. .env           # or '. ../.env' if you are in backend/
+set +a
+
+cd backend
+mvn spring-boot:run
 ```
+
+Or run with explicit properties:
+
+```bash
+cd backend
+mvn spring-boot:run \
+    -DMAIL_USERNAME=you@example.com \
+    -DMAIL_PASSWORD=<pw> \
+    -DJWT_SECRET=$(openssl rand -hex 32) \
+    …
+```
+
+Alternatively, start the whole stack with Docker Compose (it sources `.env` automatically):
+
+```bash
+docker-compose up -d
+```
+
+Once the mail credentials (and any other placeholders) are defined, the server will start on `http://localhost:8080` (context path `/api`).
 
 The backend will start on `http://localhost:8080`
 

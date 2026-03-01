@@ -89,9 +89,8 @@ export default defineComponent({
 
       try {
         successMessage.value = ''
-        await authStore.verifyEmail({
-          token: form.code,
-        })
+        // pass the raw code string rather than wrapping it in an object
+        await authStore.verifyEmail(form.code)
 
         successMessage.value = 'Email verified successfully! Redirecting to dashboard...'
         setTimeout(() => {

@@ -1,0 +1,16 @@
+Hello {{fullName}},
+
+Thank you for registering! Please verify your email by using one of the options below:
+
+1. Click the verification link:
+   *** {{verificationUrl}} ***
+
+2. Or copy this verification code and paste it in the app:
+   >>> {{token}} <<<
+
+This link/code will expire in 24 hours.
+
+If you did not register for this account, please ignore this email.
+
+Best regards,
+User Registration System

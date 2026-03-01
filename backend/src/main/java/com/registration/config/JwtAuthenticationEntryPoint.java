@@ -35,7 +35,10 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         body.put("timestamp", LocalDateTime.now());
         body.put("path", request.getServletPath());
 
-        final ObjectMapper mapper = new ObjectMapper();
+        final ObjectMapper mapper = new ObjectMapper()
+                .findAndRegisterModules(); // this will include JavaTimeModule from jackson-datatype-jsr310
+        // optionally disable timestamps for readability
+        // mapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         mapper.writeValue(response.getOutputStream(), body);
     }
 }

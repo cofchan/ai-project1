@@ -81,9 +81,8 @@ export default defineComponent({
 
       try {
         successMessage.value = ''
-        await authStore.forgotPassword({
-          email: form.email,
-        })
+        // pass raw string to avoid nested object payload
+        await authStore.forgotPassword(form.email)
 
         successMessage.value =
           'Password reset link sent to your email. Please check your inbox and follow the instructions.'

@@ -1,7 +1,14 @@
 spring:
   application:
     name: user-registration-system
-
+  config:
+    # load variables from project root .env file when running locally
+    # application runs with working directory 'backend', so ../ contains the .env file
+    # use directory import so the loader recognizes it and make it optional
+    # if dotenv import fails, you can still start by exporting vars manually or
+    # by providing placeholder defaults above.
+    #import: file:../env.properties
+    import: file:../env.properties
   datasource:
     url: jdbc:postgresql://localhost:5432/registration_db
     username: postgres

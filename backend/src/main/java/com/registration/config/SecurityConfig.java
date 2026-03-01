@@ -47,18 +47,18 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        // Public endpoints
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/verify-email").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/oauth2/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/auth/oauth2/**").permitAll()
+                        // Public endpoints (context path "/api" is applied separately)
+                        .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/verify-email").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/forgot-password").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/reset-password").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/auth/oauth2/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/auth/oauth2/**").permitAll()
 
                         // Protected endpoints
-                        .requestMatchers(HttpMethod.GET, "/api/auth/profile").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/logout").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/auth/profile").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/auth/logout").authenticated()
 
                         // Any other requests require authentication
                         .anyRequest().authenticated());

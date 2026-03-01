@@ -57,6 +57,9 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async verifyEmail(token) {
+      // token should be a simple string; callers previously passed an object which
+      // led to nested JSON payloads ({ token: { token: '...' } }) and deserialization
+      // errors on the backend.  Ensure we only send the raw value.
       this.loading = true
       this.error = null
       try {
@@ -74,6 +77,8 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async forgotPassword(email) {
+      // email should be a string; callers were previously passing
+      // an object which resulted in payloads like { email: { email: '...' }}
       this.loading = true
       this.error = null
       try {

@@ -9,6 +9,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import org.springframework.core.io.ClassPathResource;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 @Service
 @Slf4j
@@ -24,13 +28,12 @@ public class EmailService {
     private String frontendUrl;
 
     /**
-     * Send email verification email
+     * Send email verification email using a template file
      */
     public void sendVerificationEmail(User user, EmailVerificationToken token) {
         try {
             String verificationUrl = frontendUrl + "/verify-email?token=" + token.getToken();
-
-            String htmlContent = buildVerificationEmailContent(user.getFullName(), verificationUrl);
+            String htmlContent = buildVerificationEmailContent(user.getFullName(), verificationUrl, token.getToken());
 
             if (mailSender != null) {
                 SimpleMailMessage message = new SimpleMailMessage();
@@ -51,13 +54,12 @@ public class EmailService {
     }
 
     /**
-     * Send password reset email
+     * Send password reset email using a template file
      */
     public void sendPasswordResetEmail(User user, PasswordResetToken token) {
         try {
             String resetUrl = frontendUrl + "/reset-password?token=" + token.getToken();
-
-            String htmlContent = buildPasswordResetEmailContent(user.getFullName(), resetUrl);
+            String htmlContent = buildPasswordResetEmailContent(user.getFullName(), resetUrl, token.getToken());
 
             if (mailSender != null) {
                 SimpleMailMessage message = new SimpleMailMessage();
@@ -78,29 +80,40 @@ public class EmailService {
     }
 
     /**
+     * Load a template file from classpath under /email
+     */
+    private String loadTemplate(String filename) {
+        try {
+            ClassPathResource resource = new ClassPathResource("email/" + filename);
+            try (InputStream in = resource.getInputStream()) {
+                return new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            }
+        } catch (IOException e) {
+            log.error("Failed to load email template {}", filename, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * Build verification email content
      */
-    private String buildVerificationEmailContent(String fullName, String verificationUrl) {
-        return "Hello " + fullName + ",\n\n" +
-                "Thank you for registering! Please verify your email by clicking the link below:\n" +
-                verificationUrl + "\n\n" +
-                "This link will expire in 24 hours.\n\n" +
-                "If you did not register for this account, please ignore this email.\n\n" +
-                "Best regards,\n" +
-                "User Registration System";
+    private String buildVerificationEmailContent(String fullName, String verificationUrl, String token) {
+        String template = loadTemplate("verification_email.txt");
+        return template
+                .replace("{{fullName}}", fullName)
+                .replace("{{verificationUrl}}", verificationUrl)
+                .replace("{{token}}", token);
     }
 
     /**
      * Build password reset email content
      */
-    private String buildPasswordResetEmailContent(String fullName, String resetUrl) {
-        return "Hello " + fullName + ",\n\n" +
-                "You requested to reset your password. Please click the link below to reset it:\n" +
-                resetUrl + "\n\n" +
-                "This link will expire in 1 hour.\n\n" +
-                "If you did not request this, please ignore this email.\n\n" +
-                "Best regards,\n" +
-                "User Registration System";
+    private String buildPasswordResetEmailContent(String fullName, String resetUrl, String token) {
+        String template = loadTemplate("password_reset_email.txt");
+        return template
+                .replace("{{fullName}}", fullName)
+                .replace("{{resetUrl}}", resetUrl)
+                .replace("{{token}}", token);
     }
 
         /**
