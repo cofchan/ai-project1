@@ -8,13 +8,8 @@ export const useAuthStore = defineStore('auth', {
     isAuthenticated: !!localStorage.getItem('token'),
     loading: false,
     error: null,
+    twoFAMessage: '',
   }),
-
-  getters: {
-    isLoggedIn: (state) => state.isAuthenticated,
-    currentUser: (state) => state.user,
-    authToken: (state) => state.token,
-  },
 
   actions: {
     async register(registrationData) {
@@ -37,16 +32,20 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
       try {
         const response = await authApi.login(credentials)
+
+        // Check if 2FA is required before mutating auth state
+        if (response.data.requiresTwoFA) {
+          // preserve message (e.g. code sent info)
+          this.twoFAMessage = response.data.message || ''
+          return { requiresTwoFA: true }
+        }
+
+        // normal login with token
         this.token = response.data.token
         this.user = response.data.user
         this.isAuthenticated = true
         localStorage.setItem('token', response.data.token)
         localStorage.setItem('user', JSON.stringify(response.data.user))
-        
-        // Check if 2FA is required
-        if (response.data.requiresTwoFA) {
-          return { requiresTwoFA: true }
-        }
         return response.data
       } catch (err) {
         this.error = err.response?.data?.error || 'Login failed'
@@ -59,7 +58,10 @@ export const useAuthStore = defineStore('auth', {
     async verifyEmail(token) {
       // token should be a simple string; callers previously passed an object which
       // led to nested JSON payloads ({ token: { token: '...' } }) and deserialization
-      // errors on the backend.  Ensure we only send the raw value.
+      // errors on the backend.  Ensure we only send the raw value and trim whitespace.
+      if (typeof token === 'string') {
+        token = token.trim()
+      }
       this.loading = true
       this.error = null
       try {
@@ -93,6 +95,10 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async resetPassword(resetData) {
+      // trim token in case user copied with spaces
+      if (resetData && typeof resetData.token === 'string') {
+        resetData.token = resetData.token.trim()
+      }
       this.loading = true
       this.error = null
       try {
@@ -114,6 +120,7 @@ export const useAuthStore = defineStore('auth', {
         this.token = response.data.token
         this.user = response.data.user
         this.isAuthenticated = true
+        this.twoFAMessage = ''
         localStorage.setItem('token', response.data.token)
         localStorage.setItem('user', JSON.stringify(response.data.user))
         return response.data
@@ -133,6 +140,7 @@ export const useAuthStore = defineStore('auth', {
         this.token = response.data.token
         this.user = response.data.user
         this.isAuthenticated = true
+        this.twoFAMessage = ''
         localStorage.setItem('token', response.data.token)
         localStorage.setItem('user', JSON.stringify(response.data.user))
         return response.data
@@ -149,6 +157,7 @@ export const useAuthStore = defineStore('auth', {
       this.token = null
       this.isAuthenticated = false
       this.error = null
+      this.twoFAMessage = ''
       localStorage.removeItem('token')
       localStorage.removeItem('user')
     },

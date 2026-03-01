@@ -58,13 +58,18 @@ public class AuthController {
         // First authenticate the user with credentials
         AuthResponse response = userService.authenticate(request.getEmail(), request.getPassword());
         
+        // ensure flag is always set (builder may leave null)
+        response.setRequiresTwoFA(false);
+
         // Check if user has 2FA enabled
         User user = userService.findUserByEmail(request.getEmail());
         if (user != null && Boolean.TRUE.equals(user.getIsTwoFAEnabled())) {
-            // If 2FA is enabled, don't return the token yet
+            // If 2FA is enabled, send a one-time code via email and postpone token
+            userService.generateAndSendEmail2FACode(request.getEmail());
+
             response.setRequiresTwoFA(true);
             response.setToken(null); // Don't send token until 2FA is verified
-            response.setMessage("2FA verification required");
+            response.setMessage("2FA verification required; code sent to your email");
         }
         
         return ResponseEntity.ok(response);

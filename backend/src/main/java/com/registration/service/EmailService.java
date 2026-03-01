@@ -167,4 +167,30 @@ public class EmailService {
                 throw new RuntimeException("Failed to send password reset code email", e);
             }
         }
+
+    /**
+     * Send a 6-digit code for login two-factor authentication
+     */
+    public void sendTwoFactorCodeEmail(User user, String code) {
+        try {
+            String content = "Hello " + user.getFullName() + ",\n\n" +
+                    "Your two-factor authentication code is: " + code + "\n\n" +
+                    "Enter this code on the login page to complete your sign in.\n\n" +
+                    "Best regards,\nUser Registration System";
+            if (mailSender != null) {
+                SimpleMailMessage message = new SimpleMailMessage();
+                message.setFrom(fromEmail);
+                message.setTo(user.getEmail());
+                message.setSubject("Login Code - User Registration System");
+                message.setText(content);
+                mailSender.send(message);
+                log.info("2FA login code email sent successfully to: {}", user.getEmail());
+            } else {
+                log.warn("Mail sender not configured. 2FA login code: {}", code);
+            }
+        } catch (Exception e) {
+            log.error("Failed to send 2FA login code email to: {}", user.getEmail(), e);
+            throw new RuntimeException("Failed to send 2FA login code email", e);
+        }
+    }
 }

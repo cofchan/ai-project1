@@ -136,6 +136,8 @@ Response (201 Created):
 ```
 
 #### Verify Email
+> **Note:** the service automatically trims any leading/trailing whitespace from the token, so copied links with extra spaces will still work.
+
 ```bash
 POST /api/auth/verify-email
 Content-Type: application/json
@@ -196,6 +198,8 @@ Response (200 OK):
 ```
 
 #### Reset Password
+> **Note:** the token value is trimmed before verification, so extra spaces are ignored.
+
 ```bash
 POST /api/auth/reset-password
 Content-Type: application/json

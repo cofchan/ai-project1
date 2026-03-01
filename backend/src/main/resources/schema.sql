@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS users (
     is_two_fa_enabled BOOLEAN DEFAULT FALSE,
     two_fa_secret VARCHAR(255),
     two_fa_backup_codes TEXT,
+    two_fa_email_code VARCHAR(10),
+    two_fa_email_code_expiry TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );

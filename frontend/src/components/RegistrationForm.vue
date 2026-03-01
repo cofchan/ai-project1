@@ -2,12 +2,12 @@
   <div class="form-group">
     <form @submit.prevent="handleRegister" class="space-y-4">
       <div>
-        <label for="fullName" class="form-label">Full Name</label>
+        <label for="fullName" class="form-label">{{$t('fullName') || 'Full Name'}}</label>
         <input
           id="fullName"
           v-model="form.fullName"
           type="text"
-          placeholder="John Doe"
+          placeholder="{{$t('fullNamePlaceholder')}}"
           class="input-field"
           required
         />
@@ -15,12 +15,12 @@
       </div>
 
       <div>
-        <label for="email" class="form-label">Email Address</label>
+        <label for="email" class="form-label">{{$t('emailAddress')}}</label>
         <input
           id="email"
           v-model="form.email"
           type="email"
-          placeholder="user@example.com"
+          placeholder="{{$t('emailPlaceholder')}}"
           class="input-field"
           required
         />
@@ -28,7 +28,7 @@
       </div>
 
       <div>
-        <label for="password" class="form-label">Password</label>
+        <label for="password" class="form-label">{{$t('password')}}</label>
         <input
           id="password"
           v-model="form.password"
@@ -38,13 +38,13 @@
           required
         />
         <p class="text-xs text-gray-500 mt-1">
-          Min 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special char (@$!%*?&)
+          {{$t('passwordRules') || 'Min 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special char (@$!%*?&)'}}
         </p>
         <p v-if="errors.password" class="form-error">{{ errors.password }}</p>
       </div>
 
       <div>
-        <label for="passwordConfirm" class="form-label">Confirm Password</label>
+        <label for="passwordConfirm" class="form-label">{{$t('confirmPassword') || 'Confirm Password'}}</label>
         <input
           id="passwordConfirm"
           v-model="form.passwordConfirm"
@@ -65,14 +65,14 @@
         class="btn btn-primary w-full"
         :disabled="authStore.loading"
       >
-        {{ authStore.loading ? 'Creating Account...' : 'Create Account' }}
+        {{ authStore.loading ? $t('creatingAccount') || 'Creating Account...' : $t('createAccount') || 'Create Account' }}
       </button>
     </form>
 
     <p class="text-center text-sm text-gray-600 mt-4">
-      Already have an account?
+      {{$t('alreadyHaveAccount') || 'Already have an account?'}}
       <router-link to="/login" class="text-blue-600 hover:underline">
-        Sign In
+        {{$t('signIn') || 'Sign In'}}
       </router-link>
     </p>
   </div>
@@ -104,13 +104,13 @@ export default defineComponent({
     }
 
     const validateForm = () => {
-      errors.email = !form.email ? 'Email is required' : ''
-      errors.password = !form.password ? 'Password is required' : ''
-      errors.passwordConfirm = !form.passwordConfirm ? 'Password confirmation is required' : ''
-      errors.fullName = !form.fullName ? 'Full name is required' : ''
+      errors.email = !form.email ? $t('errorEmailRequired') || 'Email is required' : ''
+      errors.password = !form.password ? $t('errorPasswordRequired') || 'Password is required' : ''
+      errors.passwordConfirm = !form.passwordConfirm ? $t('errorPasswordConfirmRequired') || 'Password confirmation is required' : ''
+      errors.fullName = !form.fullName ? $t('errorFullNameRequired') || 'Full name is required' : ''
 
       if (form.password !== form.passwordConfirm) {
-        errors.passwordConfirm = 'Passwords do not match'
+        errors.passwordConfirm = $t('errorPasswordsMismatch') || 'Passwords do not match'
       }
 
       return !Object.values(errors).some(e => e)

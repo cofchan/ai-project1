@@ -130,6 +130,9 @@ public class UserService {
      */
     public UserResponse verifyEmail(String token) {
         log.info("Verifying email with token");
+        if (token != null) {
+            token = token.trim();
+        }
 
         EmailVerificationToken verificationToken = emailVerificationTokenRepository.findByToken(token)
                 .orElseThrow(() -> {
@@ -146,8 +149,10 @@ public class UserService {
 
         User user = verificationToken.getUser();
         user.setIsEmailVerified(true);
+        // automatically enable email-based 2FA after the user verifies their address
+        user.setIsTwoFAEnabled(true);
         user = userRepository.save(user);
-        log.info("Email verified successfully for user: {}", user.getEmail());
+        log.info("Email verified and 2FA enabled for user: {}", user.getEmail());
 
         // Delete used token
         emailVerificationTokenRepository.delete(verificationToken);
@@ -183,6 +188,9 @@ public class UserService {
      */
     public void resetPassword(String token, String newPassword) {
         log.info("Resetting password with token");
+        if (token != null) {
+            token = token.trim();
+        }
 
         PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
                 .orElseThrow(() -> {
@@ -359,7 +367,27 @@ public class UserService {
             throw new InvalidTokenException("2FA not enabled for this user");
         }
 
-        if (!twoFAService.verifyCode(user.getTwoFASecret(), code)) {
+        boolean verified = false;
+
+        // if an email code exists, try it first (login flow always sends one)
+        if (user.getTwoFAEmailCode() != null) {
+            if (user.getTwoFAEmailCodeExpiry() != null &&
+                    user.getTwoFAEmailCodeExpiry().isAfter(LocalDateTime.now()) &&
+                    code.equals(user.getTwoFAEmailCode())) {
+                verified = true;
+                // consume the code
+                user.setTwoFAEmailCode(null);
+                user.setTwoFAEmailCodeExpiry(null);
+                userRepository.save(user);
+            }
+        }
+
+        // if still not verified attempt TOTP secret
+        if (!verified && user.getTwoFASecret() != null) {
+            verified = twoFAService.verifyCode(user.getTwoFASecret(), code);
+        }
+
+        if (!verified) {
             throw new InvalidTokenException("Invalid 2FA code");
         }
 
@@ -437,5 +465,22 @@ public class UserService {
         user.setTwoFABackupCodes(twoFAService.backupCodesToJson(backupCodes));
         userRepository.save(user);
         log.info("Backup codes updated for user: {}", email);
+    }
+
+    /**
+     * Generate a random 6-digit code, store it with expiration and email it to user
+     */
+    public void generateAndSendEmail2FACode(String email) {
+        log.info("Generating email 2FA code for user: {}", email);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User with email " + email + " not found"));
+
+        String code = twoFAService.generateEmailCode();
+        user.setTwoFAEmailCode(code);
+        user.setTwoFAEmailCodeExpiry(LocalDateTime.now().plusMinutes(5));
+        userRepository.save(user);
+
+        emailService.sendTwoFactorCodeEmail(user, code);
+        log.info("Email 2FA code generated and sent for user: {}", email);
     }
 }

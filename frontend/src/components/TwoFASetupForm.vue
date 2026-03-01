@@ -48,7 +48,7 @@
           id="verificationCode"
           v-model="verificationCode"
           type="text"
-          placeholder="000000"
+          placeholder="{{$t('codePlaceholder')}}"
           maxlength="6"
           class="input-field text-center text-2xl tracking-widest"
           required

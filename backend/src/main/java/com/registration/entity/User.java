@@ -50,6 +50,13 @@ public class User {
     @Column(name = "two_fa_backup_codes", columnDefinition = "TEXT")
     private String twoFABackupCodes; // JSON array of backup codes
 
+    // fields used for email-based 2FA codes (sent after login)
+    @Column(name = "two_fa_email_code", length = 10)
+    private String twoFAEmailCode;
+
+    @Column(name = "two_fa_email_code_expiry")
+    private LocalDateTime twoFAEmailCodeExpiry;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

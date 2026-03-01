@@ -2,12 +2,12 @@
   <div class="form-group">
     <form @submit.prevent="handleResetPassword" class="space-y-4">
       <div>
-        <label for="token" class="form-label">Reset Token</label>
+        <label for="token" class="form-label">{{$t('resetToken') || 'Reset Token'}}</label>
         <input
           id="token"
           v-model="form.token"
           type="text"
-          placeholder="Token from reset link"
+          placeholder="{{$t('enterToken')}}"
           class="input-field"
           required
         />
@@ -15,7 +15,7 @@
       </div>
 
       <div>
-        <label for="newPassword" class="form-label">New Password</label>
+        <label for="newPassword" class="form-label">{{$t('newPassword')}}</label>
         <div class="relative">
           <input
             id="newPassword"
@@ -40,7 +40,7 @@
       </div>
 
       <div>
-        <label for="confirmPassword" class="form-label">Confirm Password</label>
+        <label for="confirmPassword" class="form-label">{{$t('confirmPassword')}}</label>
         <div class="relative">
           <input
             id="confirmPassword"
@@ -74,12 +74,12 @@
         class="btn btn-primary w-full"
         :disabled="authStore.loading"
       >
-        {{ authStore.loading ? 'Resetting...' : 'Reset Password' }}
+        {{ authStore.loading ? $t('resetting') || 'Resetting...' : $t('resetPassword') }}
       </button>
     </form>
 
     <router-link to="/login" class="block text-center text-sm text-blue-600 hover:underline mt-4">
-      Back to Login
+      {{$t('backToLogin')}}
     </router-link>
   </div>
 </template>
@@ -112,12 +112,12 @@ export default defineComponent({
     const showConfirmPassword = ref(false)
 
     const validateForm = () => {
-      errors.token = !form.token ? 'Reset token is required' : ''
-      errors.newPassword = !form.newPassword ? 'New password is required' : ''
-      errors.confirmPassword = !form.confirmPassword ? 'Password confirmation is required' : ''
+      errors.token = !form.token ? $t('errorTokenRequired') || 'Reset token is required' : ''
+      errors.newPassword = !form.newPassword ? $t('errorPasswordRequired') : ''
+      errors.confirmPassword = !form.confirmPassword ? $t('errorPasswordConfirmRequired') : ''
 
       if (form.newPassword !== form.confirmPassword) {
-        errors.confirmPassword = 'Passwords do not match'
+        errors.confirmPassword = $t('errorPasswordsMismatch')
       }
 
       return !Object.values(errors).some(e => e)
@@ -134,7 +134,7 @@ export default defineComponent({
         })
 
         successMessage.value =
-          'Password reset successfully! Redirecting to login page...'
+          $t('passwordResetSuccess') || 'Password reset successfully! Redirecting to login page...'
 
         setTimeout(() => {
           router.push('/login')

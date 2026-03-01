@@ -2,12 +2,13 @@
   <div class="form-group">
     <form v-if="!show2FAInput" @submit.prevent="handleLogin" class="space-y-4">
       <div>
-        <label for="email" class="form-label">Email Address</label>
+        <label for="email" class="form-label">{{$t('emailAddress')}}</label>
         <input
           id="email"
           v-model="form.email"
+          @input="clearFieldError('email')"
           type="email"
-          placeholder="user@example.com"
+          placeholder="{{$t('emailPlaceholder')}}"
           class="input-field"
           required
         />
@@ -15,13 +16,14 @@
       </div>
 
       <div>
-        <label for="password" class="form-label">Password</label>
+        <label for="password" class="form-label">{{$t('password')}}</label>
         <div class="relative">
           <input
             id="password"
             v-model="form.password"
+            @input="clearFieldError('password')"
             :type="showPassword ? 'text' : 'password'"
-            placeholder="••••••••"
+            placeholder="{{$t('passwordPlaceholder')}}"
             class="input-field pr-10"
             required
           />
@@ -45,7 +47,7 @@
         class="btn btn-primary w-full"
         :disabled="authStore.loading"
       >
-        {{ authStore.loading ? 'Signing In...' : 'Sign In' }}
+        {{ authStore.loading ? $t('signingIn') : $t('signIn') }}
       </button>
     </form>
 
@@ -53,17 +55,30 @@
     <form v-else @submit.prevent="handleTwoFAVerify" class="space-y-4">
       <div class="bg-blue-50 p-3 rounded-lg mb-4">
         <p class="text-sm text-blue-800">
-          Enter the 6-digit code from your authenticator app
+          {{ authStore.twoFAMessage || $t('enterAuthCode') }}
+        </p>
+        <p class="text-xs text-blue-600 mt-1">
+          <button
+            type="button"
+            class="underline hover:text-blue-800"
+            @click="resendCode"
+            :disabled="authStore.loading"
+          >
+            {{$t('resendCode')}}
+          </button>
+          <span v-if="authStore.loading">(sending...)</span>
         </p>
       </div>
 
       <div>
-        <label for="twoFACode" class="form-label">Authentication Code</label>
+        <label for="twoFACode" class="form-label">{{$t('verificationCode')}}</label>
         <input
           id="twoFACode"
+          ref="twoFACodeRef"
           v-model="twoFACode"
+          @input="clearFieldError('twoFACode')"
           type="text"
-          placeholder="000000"
+          placeholder="{{$t('codePlaceholder')}}"
           maxlength="6"
           class="input-field text-center text-2xl tracking-widest"
           required
@@ -81,33 +96,52 @@
           class="btn btn-primary flex-1"
           :disabled="authStore.loading || twoFACode.length !== 6"
         >
-          {{ authStore.loading ? 'Verifying...' : 'Verify' }}
+          {{ authStore.loading ? $t('verifying') : $t('verify') }}
         </button>
         <button
           type="button"
           @click="useBackupCode"
           class="btn btn-outline flex-1"
         >
-          Use Backup Code
+          {{$t('useBackupCode')}}
+        </button>
+      </div>
+
+      <div class="mt-4 text-center">
+        <button
+          type="button"
+          class="text-sm text-gray-600 hover:underline"
+          @click="() => { show2FAInput=false; showBackupCodeInput=false; form.password=''; }"
+        >
+          {{$t('backToLogin')}}
         </button>
       </div>
     </form>
 
     <!-- Backup Code Input -->
     <form v-if="showBackupCodeInput" @submit.prevent="handleBackupCodeVerify" class="space-y-4">
+      <div class="text-center mb-2">
+        <button
+          type="button"
+          class="text-sm text-gray-600 hover:underline"
+          @click="backToTwoFA"
+        >
+          {{$t('backTo2FA')}}
+        </button>
+      </div>
       <div class="bg-blue-50 p-3 rounded-lg mb-4">
         <p class="text-sm text-blue-800">
-          Enter one of your backup codes (format: XXXX-XXXX)
+          {{$t('backupCodeInstructions')}}
         </p>
       </div>
 
       <div>
-        <label for="backupCode" class="form-label">Backup Code</label>
+        <label for="backupCode" class="form-label">{{$t('backupCode')}}</label>
         <input
           id="backupCode"
           v-model="backupCode"
           type="text"
-          placeholder="XXXX-XXXX"
+          placeholder="{{$t('backupCodeFormat')}}"
           class="input-field"
           required
         />
@@ -151,7 +185,7 @@
 </template>
 
 <script>
-import { defineComponent, ref } from 'vue'
+import { defineComponent, ref, nextTick, watch } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useRouter } from 'vue-router'
 
@@ -179,6 +213,13 @@ export default defineComponent({
     const twoFACode = ref('')
     const backupCode = ref('')
 
+    // input refs for managing focus
+    const twoFACodeRef = ref(null)
+    const backupCodeRef = ref(null)
+
+    // remember credentials so we can resend code
+    const storedCredentials = ref({ email: '', password: '' })
+
     const validateLoginForm = () => {
       errors.email = !form.email ? 'Email is required' : ''
       errors.password = !form.password ? 'Password is required' : ''
@@ -196,6 +237,8 @@ export default defineComponent({
 
         // If 2FA is required, show 2FA input
         if (response && response.requiresTwoFA) {
+          // keep credentials around so we can resend later
+          storedCredentials.value = { ...form }
           show2FAInput.value = true
         } else {
           // Redirect to dashboard
@@ -214,7 +257,7 @@ export default defineComponent({
         return false
       }
       if (!/^\d{6}$/.test(twoFACode.value)) {
-        errors.twoFACode = '2FA code must be 6 digits'
+        errors.twoFACode = $t('errorTwoFACodeDigits') || '2FA code must be 6 digits'
         return false
       }
       errors.twoFACode = ''
@@ -239,45 +282,77 @@ export default defineComponent({
       }
     }
 
-    const useBackupCode = () => {
-      showBackupCodeInput.value = true
-    }
-
-    const backToTwoFA = () => {
-      showBackupCodeInput.value = false
-      twoFACode.value = ''
-      errors.twoFACode = ''
-    }
-
-    const validateBackupCode = () => {
+    const handleBackupCodeVerify = async () => {
       if (!backupCode.value) {
-        errors.backupCode = 'Backup code is required'
-        return false
+        errors.backupCode = $t('errorBackupCodeRequired') || 'Backup code is required'
+        return
       }
-      if (!/^[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(backupCode.value)) {
-        errors.backupCode = 'Backup code must be in format XXXX-XXXX'
-        return false
+      // simple pattern check XXXX-XXXX
+      if (!/^[A-Z0-9]{4}-[A-Z0-9]{4}$/i.test(backupCode.value)) {
+        errors.backupCode = $t('errorBackupCodeFormat') || 'Format should be XXXX-XXXX'
+        return
       }
       errors.backupCode = ''
-      return true
-    }
-
-    const handleBackupCodeVerify = async () => {
-      if (!validateBackupCode()) return
-
       try {
         await authStore.verifyBackupCode({
           email: form.email,
-          code: backupCode.value,
+          backupCode: backupCode.value,
         })
-
-        // Redirect to dashboard
         setTimeout(() => {
           router.push('/dashboard')
         }, 500)
       } catch (error) {
-        // Error is handled by the store
+        // handled by store
       }
+    }
+
+    const useBackupCode = () => {
+      showBackupCodeInput.value = true
+      show2FAInput.value = false
+      // clear twoFA code and errors
+      twoFACode.value = ''
+      errors.twoFACode = ''
+      // focus backup input once shown
+      nextTick(() => backupCodeRef.value?.focus())
+    }
+
+    const backToTwoFA = () => {
+      showBackupCodeInput.value = false
+      show2FAInput.value = true
+      backupCode.value = ''
+      errors.backupCode = ''
+      nextTick(() => twoFACodeRef.value?.focus())
+    }
+
+    const resendCode = async () => {
+      if (storedCredentials.value.email && storedCredentials.value.password) {
+        authStore.error = null
+        try {
+          const resp = await authStore.login(storedCredentials.value)
+          // message updated automatically by store
+          show2FAInput.value = true
+        } catch (e) {
+          // keep existing error display
+        }
+      }
+    }
+
+    watch(show2FAInput, visible => {
+      if (visible) {
+        nextTick(() => twoFACodeRef.value?.focus())
+      }
+    })
+
+    watch(showBackupCodeInput, visible => {
+      if (visible) {
+        nextTick(() => backupCodeRef.value?.focus())
+      }
+    })
+
+    // clear error when user edits any field
+    const clearFieldError = field => {
+      errors[field] = ''
+      authStore.error = null
     }
 
     return {

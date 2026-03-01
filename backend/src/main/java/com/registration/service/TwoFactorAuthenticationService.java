@@ -15,6 +15,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
+import java.security.SecureRandom;
 import java.util.*;
 
 @Service
@@ -139,6 +140,15 @@ public class TwoFactorAuthenticationService {
         }
         
         return backupCodes;
+    }
+
+    /**
+     * Generate a random six-digit code for email-based 2FA
+     */
+    public String generateEmailCode() {
+        SecureRandom secureRandom = new SecureRandom();
+        int code = secureRandom.nextInt(900000) + 100000; // 100000-999999
+        return String.valueOf(code);
     }
 
     /**

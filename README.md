@@ -122,6 +122,7 @@ user-registration-system/
 ✅ Global exception handling
 ✅ Request validation
 ✅ Comprehensive logging
+✅ Two-factor authentication via email code sent after login
 
 ### Frontend (Vue 3)
 ✅ Project structure and routing
@@ -153,6 +154,8 @@ POST /api/auth/verify-email
 }
 ```
 
+> **Note:** once the token is accepted the account is marked verified and two-factor authentication is enabled by default. The first login after verification will therefore require a 6‑digit email code (unless the user later configures a different 2FA method).
+
 ### Login
 ```bash
 POST /api/auth/login
@@ -162,7 +165,22 @@ POST /api/auth/login
 }
 ```
 
-### Forgot Password
+If the account has two-factor authentication enabled the response will return `requiresTwoFA=true`, a message indicating a code was sent, and the JWT token will be omitted. The client must then submit the 6‑digit code via:
+
+```bash
+POST /api/auth/2fa/verify
+{
+  "email": "user@example.com",
+  "code": "123456"
+}
+```
+Frontend clients should provide a smooth experience when the code is required:
+* automatically focus the verification field when it appears
+* allow the user to resend the code (re‑triggering the login endpoint with the same credentials)
+* include a "Back to login" link so the user can re‑enter credentials or correct mistakes
+* show helpful validation and error messages as the user types
+
+These enhancements are implemented in the provided `frontend/src/components/LoginForm.vue` component.### Forgot Password
 ```bash
 POST /api/auth/forgot-password
 {

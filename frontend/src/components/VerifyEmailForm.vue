@@ -2,18 +2,18 @@
   <div class="form-group">
     <div class="bg-blue-50 p-4 rounded-lg mb-6">
       <p class="text-sm text-blue-800">
-        We've sent a verification link to your email. Enter the verification code below to confirm your email address.
+        {{$t('verifyEmailInstructions') || "We've sent a verification link to your email. Enter the verification code below to confirm your email address."}}
       </p>
     </div>
 
     <form @submit.prevent="handleVerifyEmail" class="space-y-4">
       <div>
-        <label for="code" class="form-label">Verification Code</label>
+        <label for="code" class="form-label">{{$t('verificationCode')}}</label>
         <input
           id="code"
           v-model="form.code"
           type="text"
-          placeholder="Enter code from email"
+          placeholder="{{$t('enterToken')}}"
           class="input-field"
           required
         />
@@ -33,26 +33,26 @@
         class="btn btn-primary w-full"
         :disabled="authStore.loading"
       >
-        {{ authStore.loading ? 'Verifying...' : 'Verify Email' }}
+        {{ authStore.loading ? $t('verifying') : $t('verifyEmail') }}
       </button>
     </form>
 
     <div class="mt-4 text-center">
       <p class="text-sm text-gray-600">
-        Didn't receive the email?
+        {{$t('didntReceiveEmail') || "Didn't receive the email?"}}
         <button
           type="button"
           @click="resendCode"
           class="text-blue-600 hover:underline"
           :disabled="authStore.loading"
         >
-          {{ resendLoading ? 'Sending...' : 'Resend Code' }}
+          {{ resendLoading ? $t('sending') || 'Sending...' : $t('resendCode') }}
         </button>
       </p>
     </div>
 
     <router-link to="/login" class="block text-center text-sm text-blue-600 hover:underline mt-4">
-      Back to Login
+      {{$t('backToLogin')}}
     </router-link>
   </div>
 </template>
@@ -80,7 +80,7 @@ export default defineComponent({
     const resendLoading = ref(false)
 
     const validateForm = () => {
-      errors.code = !form.code ? 'Verification code is required' : ''
+      errors.code = !form.code ? $t('errorCodeRequired') || 'Verification code is required' : ''
       return !errors.code
     }
 
@@ -92,7 +92,7 @@ export default defineComponent({
         // pass the raw code string rather than wrapping it in an object
         await authStore.verifyEmail(form.code)
 
-        successMessage.value = 'Email verified successfully! Redirecting to dashboard...'
+        successMessage.value = $t('emailVerifiedSuccess') || 'Email verified successfully! Two-factor authentication has been enabled; you will be prompted to enter a code on your next login. Redirecting to dashboard...'
         setTimeout(() => {
           router.push('/dashboard')
         }, 2000)

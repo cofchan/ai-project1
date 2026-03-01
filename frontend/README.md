@@ -11,9 +11,25 @@ This is the frontend service for the user registration system built with Vue 3, 
 - **OAuth2 Integration**: Social login with Google and GitHub
 - **Protected Routes**: JWT-based route protection
 - **State Management**: Pinia store for auth state
+- **Internationalization**: vue-i18n used for translations (see `src/locales`)
 - **Form Validation**: Real-time form validation
 - **Responsive Design**: Mobile-friendly UI with Tailwind CSS
 - **Error Handling**: Comprehensive error messages and handling
+- **Multi-language UI**: English, Spanish and Traditional Chinese are supported
+
+## Internationalization
+
+The UI now supports multiple languages using `vue-i18n`. English (`en`) is included by default; Spanish (`es`) is provided as an example. Switch languages with the selector in the top navigation bar.
+
+To add additional locales:
+1. Install the dependency (if not already):
+   ```bash
+   npm install vue-i18n@9
+   ```
+2. Create a JSON file under `src/locales` for the new language.
+3. Import the file in `src/i18n.js` and add its key to the `messages` object.
+4. Use `$t('your.key')` in components for translatable text.
+
 
 ## Prerequisites
 

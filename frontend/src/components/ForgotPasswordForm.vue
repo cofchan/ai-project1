@@ -2,12 +2,12 @@
   <div class="form-group">
     <form @submit.prevent="handleForgotPassword" class="space-y-4">
       <div>
-        <label for="email" class="form-label">Email Address</label>
+        <label for="email" class="form-label">{{$t('emailAddress')}}</label>
         <input
           id="email"
           v-model="form.email"
           type="email"
-          placeholder="user@example.com"
+          placeholder="{{$t('emailPlaceholder')}}"
           class="input-field"
           required
         />
@@ -27,21 +27,21 @@
         class="btn btn-primary w-full"
         :disabled="authStore.loading"
       >
-        {{ authStore.loading ? 'Sending...' : 'Send Reset Link' }}
+        {{ authStore.loading ? $t('sending') : $t('sendResetLink') }}
       </button>
     </form>
 
     <p class="text-center text-sm text-gray-600 mt-4">
-      Remember your password?
+      {{$t('rememberPassword') || 'Remember your password?'}}
       <router-link to="/login" class="text-blue-600 hover:underline">
-        Back to Login
+        {{$t('backToLogin')}}
       </router-link>
     </p>
 
     <p class="text-center text-sm text-gray-600 mt-2">
-      Don't have an account?
+      {{$t('dontHaveAccount') || "Don't have an account?"}}
       <router-link to="/register" class="text-blue-600 hover:underline">
-        Sign Up
+        {{$t('register')}}
       </router-link>
     </p>
   </div>
@@ -68,9 +68,9 @@ export default defineComponent({
 
     const validateForm = () => {
       errors.email = !form.email
-        ? 'Email is required'
+        ? $t('errorEmailRequired')
         : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)
-          ? 'Please enter a valid email'
+          ? $t('errorValidEmail') || 'Please enter a valid email'
           : ''
 
       return !errors.email
@@ -85,7 +85,7 @@ export default defineComponent({
         await authStore.forgotPassword(form.email)
 
         successMessage.value =
-          'Password reset link sent to your email. Please check your inbox and follow the instructions.'
+          $t('passwordResetSent') || 'Password reset link sent to your email. Please check your inbox and follow the instructions.'
       } catch (error) {
         // Error is handled by the store
       }
