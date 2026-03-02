@@ -219,7 +219,7 @@ public class UserService {
     }
 
     /**
-     * Authenticate user with email and password
+     * Authenticate user with email and password ;
      */
     public AuthResponse authenticate(String email, String password) {
         log.info("Authenticating user: {}", email);
