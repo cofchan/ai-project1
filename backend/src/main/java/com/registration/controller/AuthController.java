@@ -156,32 +156,26 @@ public class AuthController {
     }
 
     /**
-     * Confirm 2FA setup with code
+     * Redirect to OAuth2 login provider
      */
-    @PostMapping("/2fa/confirm")
-    public ResponseEntity<MessageResponse> confirmTwoFA(
-            @Valid @RequestBody TwoFAConfirmRequest request,
-            Authentication authentication) {
+    @GetMapping("/login")
+    public ResponseEntity<Void> oauth2LoginRedirect() {
+        // Frontend should redirect to /oauth2/authorization/{provider}
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .header("Location", "/oauth2/authorization/google") // or github, configurable
+                .build();
+    }
+
+    /**
+     * OAuth2 callback endpoint (Spring Security handles this, but you can add a custom handler if needed)
+     */
+    @GetMapping("/oauth2/callback")
+    public ResponseEntity<?> oauth2Callback(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("OAuth2 authentication failed");
         }
-
-        String email = authentication.getName();
-
-        if (!twoFAService.verifyCode(request.getSecret(), request.getCode())) {
-            return ResponseEntity.badRequest().body(MessageResponse.builder()
-                    .message("Invalid 2FA code")
-                    .success(false)
-                    .build());
-        }
-
-        var backupCodes = twoFAService.generateBackupCodes();
-        userService.enableTwoFA(email, request.getSecret(), backupCodes);
-
-        return ResponseEntity.ok(MessageResponse.builder()
-                .message("Two-factor authentication enabled successfully")
-                .success(true)
-                .build());
+        // You can extract user details from authentication.getPrincipal()
+        return ResponseEntity.ok("OAuth2 login successful");
     }
 
     /**
