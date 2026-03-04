@@ -1,95 +1,232 @@
 # User Registration System
 
-A full-stack user registration system with email verification, password reset, and OAuth2 authentication.
+> A full-stack user registration and authentication system with JWT, 2FA, OAuth2, and email verification. Built with Spring Boot 3.2 and Vue 3.
 
-**Technology Stack:**
-- **Backend**: Spring Boot 3.2, Java 17, PostgreSQL
-- **Frontend**: Vue 3, Vite, Tailwind CSS, Pinia
-- **Database**: PostgreSQL 15
-- **Authentication**: JWT + Spring Security + OAuth2
+![Stack](https://img.shields.io/badge/Spring%20Boot-3.2-green) ![Vue](https://img.shields.io/badge/Vue-3-blue) ![Java](https://img.shields.io/badge/Java-17-orange) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue)
 
-## Quick Start
+---
+
+## ✨ Features
+
+- 🔐 **Authentication**: JWT-based stateless auth with BCrypt password hashing
+- ✉️ **Email Verification**: Secure email verification with time-limited tokens
+- 🔑 **Password Reset**: Email-based password recovery flow
+- 🛡️ **Two-Factor Authentication**: Email-based 2FA (auto-enabled) + optional TOTP
+- 🌐 **OAuth2 Integration**: Sign in with Google or GitHub
+- 🌍 **Internationalization**: English, Español, 繁體中文
+- 📧 **Email Notifications**: Login notifications, verification emails, password resets
+- 🗄️ **Database**: PostgreSQL 15 with Hibernate ORM
+- 🎨 **Modern UI**: Vue 3 + Vite + Tailwind CSS
+
+---
+
+## 📁 Project Structure
+
+```
+.
+├── backend/              # Spring Boot 3.2 REST API
+│   ├── src/main/java/com/registration/
+│   │   ├── controller/   # REST endpoints
+│   │   ├── service/      # Business logic
+│   │   ├── repository/   # JPA repositories
+│   │   ├── entity/       # JPA entities
+│   │   ├── dto/          # Request/response DTOs
+│   │   ├── exception/    # Custom exceptions
+│   │   └── config/       # Security & app config
+│   ├── src/main/resources/
+│   │   ├── application.yml
+│   │   ├── schema.sql
+│   │   └── email/        # Email templates
+│   └── pom.xml
+│
+├── frontend/             # Vue 3 SPA
+│   ├── src/
+│   │   ├── api/          # Axios API client
+│   │   ├── components/   # Vue components
+│   │   ├── views/        # Route pages
+│   │   ├── stores/       # Pinia state management
+│   │   ├── locales/      # i18n translations
+│   │   └── router/       # Vue Router
+│   └── package.json
+│
+├── docker-compose.yml    # PostgreSQL + pgAdmin
+├── env.properties        # Secrets (never commit real values)
+└── README.md
+```
+
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
-- Java 17+
-- Node.js 16+
-- PostgreSQL 12+ (or Docker + Docker Compose)
-- Maven 3.6+
-- npm or yarn
 
-### 1. Setup Database
+- **Java 17** or higher
+- **Node.js 18+** and npm
+- **Docker & Docker Compose** (for PostgreSQL)
 
-Using Docker Compose (Recommended):
+### 1. Start Database
+
 ```bash
 docker-compose up -d
 ```
 
-This starts PostgreSQL on port 5432 and pgAdmin on port 5050.
+This starts PostgreSQL (port 5432) and pgAdmin (port 5050).
 
-### 2. Configure Environment
+### 2. Configure Secrets
 
-Copy the example env file and configure:
-```bash
-cp .env.example .env
+Create `env.properties` at the project root with your secrets:
+
+```properties
+# JWT
+JWT_SECRET=your-secret-key-min-512-bits
+
+# Email (SMTP)
+MAIL_USERNAME=your-email@example.com
+MAIL_PASSWORD=your-app-password
+
+# OAuth2 - Google
+OAUTH2_GOOGLE_CLIENT_ID=your-google-client-id
+OAUTH2_GOOGLE_CLIENT_SECRET=your-google-client-secret
+OAUTH2_GOOGLE_REDIRECT_URI=http://localhost:8080/api/auth/oauth2/callback/google
+
+# OAuth2 - GitHub
+OAUTH2_GITHUB_CLIENT_ID=your-github-client-id
+OAUTH2_GITHUB_CLIENT_SECRET=your-github-client-secret
+OAUTH2_GITHUB_REDIRECT_URI=http://localhost:8080/api/auth/oauth2/callback/github
 ```
 
-Edit `.env` with your settings:
-- Email service credentials (Gmail, SendGrid, etc.)
-- OAuth2 credentials (Google, GitHub)
-- JWT secret
+**⚠️ Never commit real secrets to version control!**
 
 ### 3. Start Backend
 
 ```bash
 cd backend
-
-# Build
-mvn clean install
-
-# Run
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
-Backend runs on: `http://localhost:8080`
+Backend API runs at: http://localhost:8080/api
 
 ### 4. Start Frontend
 
-In a new terminal:
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-# Run development server
 npm run dev
 ```
 
-Frontend runs on: `http://localhost:5173`
+Frontend dev server runs at: http://localhost:5173
 
-## Project Structure
+---
 
+## 📚 Documentation
+
+- **[Backend README](backend/README.md)** — API endpoints, configuration, testing
+- **[Frontend README](frontend/README.md)** — UI components, i18n, build process
+
+---
+
+## 🧪 Testing
+
+### Backend Tests
+
+```bash
+cd backend
+./mvnw test
 ```
-user-registration-system/
-├── backend/                  # Spring Boot application
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/com/registration/
-│   │   │   │   ├── entity/            # JPA Entities
-│   │   │   │   ├── repository/        # Data repositories
-│   │   │   │   ├── service/           # Business logic
-│   │   │   │   ├── controller/        # REST endpoints
-│   │   │   │   ├── dto/               # Data transfer objects
-│   │   │   │   ├── exception/         # Custom exceptions
-│   │   │   │   └── config/            # Configuration classes
-│   │   │   └── resources/
-│   │   │       ├── application.yml    # Spring config
-│   │   │       └── schema.sql         # Database schema
-│   │   └── test/                      # Unit tests
-│   ├── pom.xml                        # Maven dependencies
-│   └── README.md
-│
-├── frontend/                 # Vue 3 application
+
+Includes unit tests (JUnit 5 + Mockito) and integration tests (Spring Boot Test + H2).
+
+### API Tests
+
+```bash
+cd backend/api-tests
+./run_api_tests.sh
+```
+
+Bash/curl smoke tests for all endpoints (requires running backend + PostgreSQL).
+
+---
+
+## 🔒 Security
+
+- **Stateless JWT**: HS512 algorithm, 24-hour expiration
+- **Password Policy**: Min 8 chars, uppercase, lowercase, digit, special char
+- **BCrypt**: Password hashing with strength 12
+- **CSRF Protection**: Disabled (stateless API)
+- **CORS**: Configured for localhost:5173 and localhost:3000
+- **2FA**: Email-based (auto-enabled on verification) + optional TOTP
+
+---
+
+## 🌍 API Endpoints
+
+All endpoints are prefixed with `/api/auth`:
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/register` | Register new user | No |
+| POST | `/login` | Login with credentials | No |
+| POST | `/verify-email` | Verify email with token | No |
+| POST | `/forgot-password` | Request password reset | No |
+| POST | `/reset-password` | Reset password with token | No |
+| GET | `/oauth2/authorize/{provider}` | OAuth2 authorization | No |
+| GET | `/oauth2/callback/{provider}` | OAuth2 callback | No |
+| POST | `/2fa/send-code` | Request 2FA code | No |
+| POST | `/2fa/verify-code` | Verify 2FA code | No |
+| POST | `/2fa/verify-backup-code` | Verify backup code | No |
+| POST | `/2fa/setup-totp` | Setup TOTP 2FA | Yes |
+| POST | `/2fa/verify-totp` | Verify TOTP setup | Yes |
+| POST | `/2fa/disable-totp` | Disable TOTP 2FA | Yes |
+| GET | `/profile` | Get user profile | Yes |
+| POST | `/logout` | Logout user | Yes |
+
+---
+
+## 🛠️ Tech Stack
+
+### Backend
+- **Framework**: Spring Boot 3.2.2
+- **Language**: Java 17
+- **Security**: Spring Security + JWT
+- **Database**: PostgreSQL 15 + Hibernate ORM
+- **Validation**: Jakarta Bean Validation
+- **Email**: JavaMailSender
+- **Build**: Maven
+
+### Frontend
+- **Framework**: Vue 3 (Composition API + Options API)
+- **Build Tool**: Vite
+- **State Management**: Pinia
+- **Routing**: Vue Router
+- **HTTP Client**: Axios
+- **Styling**: Tailwind CSS
+- **i18n**: vue-i18n
+
+### DevOps
+- **Containerization**: Docker + Docker Compose
+- **Database Admin**: pgAdmin 4
+
+---
+
+## 📝 License
+
+MIT
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+---
+
+## 📧 Support
+
+For issues or questions, please open an issue on GitHub.
 │   ├── src/
 │   │   ├── components/      # Vue components
 │   │   ├── stores/          # Pinia stores
@@ -372,52 +509,57 @@ Create `.env` file in root directory with your configuration. See `.env.example`
 - [ ] OAuth2 full integration (Google, GitHub)
 - [ ] Complete Vue form components with validation
 - [ ] Unit tests for backend services
-- [ ] Integration tests
-- [ ] E2E tests with Cypress/Playwright
-- [ ] Admin dashboard
-- [ ] User profile management
-- [ ] Rate limiting
-- [ ] Database encryption
-- [ ] Brute force protection
-- [ ] Two-factor authentication
-- [ ] WebSocket for real-time notifications
+# User Registration System
 
-## Contributing
+Full-stack user registration and authentication system:
 
-1. Create feature branch: `git checkout -b feature/xyz`
-2. Make changes and commit: `git commit -m "Add xyz"`
-3. Push to branch: `git push origin feature/xyz`
-4. Open pull request
+- Backend: Spring Boot 3.2 (Java 17) — stateless JWT auth, BCrypt passwords, optional OAuth2 & 2FA
+- Frontend: Vue 3 + Vite — Pinia, Vue Router, Tailwind CSS, vue-i18n
 
-## Resources
+This repository contains a complete dev setup (Postgres + pgAdmin) plus backend and frontend apps.
 
-**Backend Documentation:**
-- [Spring Boot 3.2](https://spring.io/projects/spring-boot)
-- [Spring Security](https://spring.io/projects/spring-security)
-- [Spring Data JPA](https://spring.io/projects/spring-data-jpa)
+Quick start (developer):
 
-**Frontend Documentation:**
-- [Vue 3](https://vuejs.org/)
-- [Vite](https://vitejs.dev/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Pinia](https://pinia.vuejs.org/)
-- [Axios](https://axios-http.com/)
+1) Start local infrastructure (Postgres + pgAdmin):
 
-**Infrastructure:**
-- [PostgreSQL](https://www.postgresql.org/)
-- [Docker](https://www.docker.com/)
-- [JWT.io](https://jwt.io/)
+```bash
+docker-compose up -d
+```
 
-## License
+2) Run the backend:
 
-This project is available for educational purposes.
+```bash
+cd backend
+mvn clean compile
+mvn spring-boot:run
+```
 
-## Support
+3) Run the frontend (separate terminal):
 
-For detailed documentation:
-- Backend: See [backend/README.md](backend/README.md)
-- Frontend: See [frontend/README.md](frontend/README.md)
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
+Notes
+- The backend loads sensitive values from `env.properties` at the repository root (JWT secret, mail credentials, OAuth client secrets). Keep that file out of VCS.
+- Frontend dev server proxies `/api` to `http://localhost:8080` (see `vite.config.js`).
+- Local ports used: backend `8080`, frontend `5173`.
+
+Testing
+- Run backend unit and integration tests:
+
+```bash
+cd backend
+mvn test
+```
+
+Where to look for more
+- Backend details and commands: `backend/README.md`
+- Frontend details and commands: `frontend/README.md`
+
+If you want, I can also regenerate or expand these READMEs with more environment examples, troubleshooting, or CI snippets.
 ---
 
 **Created**: February 2026

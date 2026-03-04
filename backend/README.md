@@ -1,119 +1,136 @@
-# User Registration System - Backend
+# Backend — Spring Boot REST API
 
-This is the backend service for the user registration system built with Spring Boot 3.x and Java 17.
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2-green) ![Java](https://img.shields.io/badge/Java-17-orange) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue)
 
-## Features
+> REST API for user registration, authentication, 2FA, OAuth2, and email notifications. Stateless JWT security with Spring Security, PostgreSQL persistence, and comprehensive email workflows.
 
-- **User Registration**: Register new users with email and password
-- **Email Verification**: Secure email verification with time-limited tokens (24 hours)
-- **Login**: Authenticate users with JWT tokens
-- **Password Reset**: Secure password reset with time-limited tokens (1 hour)
-- **Spring Security**: JWT-based authentication and authorization
-- **CORS**: Configured for frontend communication
-- **Input Validation**: Comprehensive validation using Jakarta Validation
-- **Error Handling**: Global exception handler with detailed error responses
-- **Logging**: SLF4J logging with detailed audit trails
+---
 
-## Prerequisites
+## 🚀 Quick Start
 
-- Java 17 or higher
-- Maven 3.6+
-- PostgreSQL 12+
-- (Optional) Docker and Docker Compose
+### Prerequisites
 
-## Setup
+- **Java 17** or higher
+- **Maven 3.6+** (or use included `./mvnw`)
+- **PostgreSQL 15** (via Docker Compose recommended)
 
-### 1. Database Setup
+### 1. Start Database
 
-#### Option A: Using Docker Compose (Recommended)
-
-```bash
-cd /home/cofchan/ai-code/ai-project1
-docker-compose up -d
-```
-
-This will start:
-- PostgreSQL on port 5432
-- pgAdmin on port 5050 (admin@pgadmin.com / admin)
-
-#### Option B: Manual PostgreSQL Setup
-
-```bash
-# Create database
-psql -U postgres -c "CREATE DATABASE registration_db;"
-
-# Run schema.sql
-psql -U postgres -d registration_db -f backend/src/main/resources/schema.sql
-```
-
-### 2. Configure Environment Variables
-
-Copy `.env.example` to `.env` and configure (Spring will automatically import this file when the app starts):
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with real values:
-- `MAIL_USERNAME`: Your email for sending verification/reset emails
-- `MAIL_PASSWORD`: Your email app-specific password
-- `GOOGLE_CLIENT_ID`: Google OAuth2 client ID
-- `GOOGLE_CLIENT_SECRET`: Google OAuth2 client secret
-- `GITHUB_CLIENT_ID`: GitHub OAuth2 client ID
-- `GITHUB_CLIENT_SECRET`: GitHub OAuth2 client secret
-- `JWT_SECRET`: A secure random string (min 256 bits)
-
-### 3. Build the Project
-
-```bash
-cd backend
-mvn clean install
-```
-
-### 4. Run the Application
-
-Before starting the app you must make the environment variables available to the JVM. The `.env` file created in step 2 is **not** loaded automatically by `mvn spring-boot:run`, so either export the values or source the file yourself.
-
-Example using a Unix shell:
-
-```bash
-# from project root
-cp .env.example .env          # if not done already
-# load every variable in .env
-set -a
-. .env           # or '. ../.env' if you are in backend/
-set +a
-
-cd backend
-mvn spring-boot:run
-```
-
-Or run with explicit properties:
-
-```bash
-cd backend
-mvn spring-boot:run \
-    -DMAIL_USERNAME=you@example.com \
-    -DMAIL_PASSWORD=<pw> \
-    -DJWT_SECRET=$(openssl rand -hex 32) \
-    …
-```
-
-Alternatively, start the whole stack with Docker Compose (it sources `.env` automatically):
+From project root:
 
 ```bash
 docker-compose up -d
 ```
 
-Once the mail credentials (and any other placeholders) are defined, the server will start on `http://localhost:8080` (context path `/api`).
+### 2. Configure Secrets
 
-The backend will start on `http://localhost:8080`
+Create `env.properties` at the **project root** (one level up from `backend/`):
 
-## API Documentation
+```properties
+# JWT Configuration
+JWT_SECRET=your-secret-key-must-be-at-least-512-bits-long
 
-### Authentication Endpoints
+# Email Configuration (SMTP)
+MAIL_USERNAME=your-email@example.com
+MAIL_PASSWORD=your-app-specific-password
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+
+# OAuth2 - Google
+OAUTH2_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+OAUTH2_GOOGLE_CLIENT_SECRET=your-google-client-secret
+OAUTH2_GOOGLE_REDIRECT_URI=http://localhost:8080/api/auth/oauth2/callback/google
+
+# OAuth2 - GitHub
+OAUTH2_GITHUB_CLIENT_ID=your-github-client-id
+OAUTH2_GITHUB_CLIENT_SECRET=your-github-client-secret
+OAUTH2_GITHUB_REDIRECT_URI=http://localhost:8080/api/auth/oauth2/callback/github
+```
+
+**⚠️ Security Warning**: Never commit `env.properties` with real credentials!
+
+### 3. Run the Application
+
+```bash
+cd backend
+./mvnw spring-boot:run
+```
+
+API runs at: **http://localhost:8080/api**
+
+### 4. Verify Setup
+
+Test the health of the API:
+
+```bash
+curl http://localhost:8080/api/auth/register
+```
+
+---
+
+## 🧪 Testing
+
+### Run All Tests
+
+```bash
+./mvnw test
+```
+
+Tests include:
+- **Unit Tests**: JUnit 5 + Mockito + AssertJ
+- **Integration Tests**: `@SpringBootTest` + MockMvc + H2 in-memory DB
+
+### Run Specific Test Class
+
+```bash
+./mvnw test -Dtest=UserServiceTest
+./mvnw test -Dtest=AuthControllerIntegrationTest
+```
+
+### API Smoke Tests
+
+Manual API tests using curl:
+
+```bash
+cd api-tests
+./run_api_tests.sh
+```
+
+---
+
+## 📋 API Endpoints
+
+Base URL: `/api/auth`
+
+### Public Endpoints (No Authentication Required)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/register` | Register new user |
+| POST | `/login` | Login with email/password |
+| POST | `/verify-email` | Verify email with token |
+| POST | `/forgot-password` | Request password reset email |
+| POST | `/reset-password` | Reset password with token |
+| GET | `/oauth2/authorize/{provider}` | Initiate OAuth2 flow (google/github) |
+| GET | `/oauth2/callback/{provider}` | OAuth2 callback handler |
+| POST | `/2fa/send-code` | Request 2FA email code |
+| POST | `/2fa/verify-code` | Verify 2FA email code |
+| POST | `/2fa/verify-backup-code` | Verify 2FA backup code |
+
+### Protected Endpoints (JWT Required)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/profile` | Get current user profile |
+| POST | `/logout` | Logout (client-side JWT removal) |
+| POST | `/2fa/setup-totp` | Setup TOTP 2FA |
+| POST | `/2fa/verify-totp` | Confirm TOTP setup |
+| POST | `/2fa/disable-totp` | Disable TOTP 2FA |
+
+### Example Requests
 
 #### Register User
+
 ```bash
 POST /api/auth/register
 Content-Type: application/json
@@ -121,42 +138,19 @@ Content-Type: application/json
 {
   "email": "user@example.com",
   "password": "SecurePass123!",
-  "passwordConfirm": "SecurePass123!",
-  "fullName": "John Doe"
-}
-
-Response (201 Created):
-{
-  "id": 1,
-  "email": "user@example.com",
-  "fullName": "John Doe",
-  "isEmailVerified": false,
-  "message": "User registered successfully. Please verify your email."
-}
-```
-
-#### Verify Email
-> **Note:** the service automatically trims any leading/trailing whitespace from the token, so copied links with extra spaces will still work.
-
-```bash
-POST /api/auth/verify-email
-Content-Type: application/json
-
-{
-  "token": "uuid-verification-token"
+  "firstName": "John",
+  "lastName": "Doe"
 }
 
 Response (200 OK):
 {
-  "id": 1,
-  "email": "user@example.com",
-  "fullName": "John Doe",
-  "isEmailVerified": true,
-  "oauth2Provider": null
+  "message": "Registration successful. Please check your email to verify your account.",
+  "success": true
 }
 ```
 
 #### Login
+
 ```bash
 POST /api/auth/login
 Content-Type: application/json
@@ -169,35 +163,300 @@ Content-Type: application/json
 Response (200 OK):
 {
   "token": "eyJhbGciOiJIUzUxMiJ9...",
-  "type": "Bearer",
-  "user": {
-    "id": 1,
-    "email": "user@example.com",
-    "fullName": "John Doe",
-    "isEmailVerified": true,
-    "oauth2Provider": null
-  },
-  "message": "Authentication successful"
+  "email": "user@example.com",
+  "firstName": "John",
+  "lastName": "Doe"
 }
 ```
 
-#### Forgot Password
-```bash
-POST /api/auth/forgot-password
-Content-Type: application/json
+#### Get Profile (Authenticated)
 
-{
-  "email": "user@example.com"
-}
+```bash
+GET /api/auth/profile
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9...
 
 Response (200 OK):
 {
-  "message": "Password reset email has been sent to user@example.com",
-  "success": true
+  "id": 1,
+  "email": "user@example.com",
+  "firstName": "John",
+  "lastName": "Doe",
+  "emailVerified": true,
+  "twoFactorEnabled": true,
+  "totpEnabled": false
 }
 ```
 
-#### Reset Password
+---
+
+## 🏗️ Project Structure
+
+```
+backend/
+├── src/
+│   ├── main/
+│   │   ├── java/com/registration/
+│   │   │   ├── UserRegistrationApplication.java   # Main application
+│   │   │   ├── config/
+│   │   │   │   ├── SecurityConfig.java            # Spring Security setup
+│   │   │   │   ├── JwtAuthenticationFilter.java   # JWT filter
+│   │   │   │   └── JwtTokenProvider.java          # JWT generation/validation
+│   │   │   ├── controller/
+│   │   │   │   └── AuthController.java            # REST endpoints
+│   │   │   ├── service/
+│   │   │   │   ├── UserService.java               # User business logic
+│   │   │   │   ├── EmailService.java              # Email sending
+│   │   │   │   ├── TwoFactorService.java          # 2FA logic
+│   │   │   │   └── OAuth2Service.java             # OAuth2 integration
+│   │   │   ├── repository/
+│   │   │   │   └── UserRepository.java            # JPA repository
+│   │   │   ├── entity/
+│   │   │   │   └── User.java                      # JPA entity
+│   │   │   ├── dto/
+│   │   │   │   ├── *Request.java                  # Request DTOs
+│   │   │   │   └── *Response.java                 # Response DTOs
+│   │   │   └── exception/
+│   │   │       ├── GlobalExceptionHandler.java    # Exception handling
+│   │   │       └── *Exception.java                # Custom exceptions
+│   │   └── resources/
+│   │       ├── application.yml                    # App configuration
+│   │       ├── schema.sql                         # Database schema
+│   │       └── email/
+│   │           ├── verification_email.txt
+│   │           ├── password_reset_email.txt
+│   │           └── login_notification_email.txt
+│   └── test/
+│       └── java/com/registration/
+│           ├── controller/
+│           │   └── AuthControllerIntegrationTest.java
+│           └── service/
+│               └── UserServiceTest.java
+├── api-tests/
+│   └── run_api_tests.sh                           # Bash API tests
+├── pom.xml                                        # Maven dependencies
+└── README.md
+```
+
+---
+
+## ⚙️ Configuration
+
+### Application Configuration
+
+`src/main/resources/application.yml`:
+
+```yaml
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: user-registration-system
+  datasource:
+    url: jdbc:postgresql://localhost:5432/user_registration
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+  config:
+    import: optional:file:../env.properties
+```
+
+### Secret Management
+
+Secrets are loaded from `env.properties` at the project root via `spring.config.import`. The application expects the following properties:
+
+- `JWT_SECRET` — Secret key for JWT signing (min 512 bits)
+- `MAIL_USERNAME` — SMTP username
+- `MAIL_PASSWORD` — SMTP password
+- `OAUTH2_GOOGLE_CLIENT_ID` — Google OAuth2 client ID
+- `OAUTH2_GOOGLE_CLIENT_SECRET` — Google OAuth2 secret
+- `OAUTH2_GITHUB_CLIENT_ID` — GitHub OAuth2 client ID
+- `OAUTH2_GITHUB_CLIENT_SECRET` — GitHub OAuth2 secret
+
+### Database Schema
+
+`src/main/resources/schema.sql` contains the initial database structure:
+
+- **users** table: id, email, password, first_name, last_name, email_verified, verification_token, etc.
+
+Schema is auto-applied via Hibernate `ddl-auto: update`.
+
+---
+
+## 🔒 Security
+
+### Authentication Flow
+
+1. User registers → email verification token sent
+2. User verifies email → email-based 2FA auto-enabled
+3. User logs in → if 2FA enabled, email code required
+4. After successful 2FA → JWT token issued (24-hour expiry)
+5. Client stores JWT → includes in `Authorization: Bearer <token>` header
+
+### Password Requirements
+
+Validated via `@Pattern` annotation on DTOs:
+
+- Minimum 8 characters
+- At least one uppercase letter
+- At least one lowercase letter
+- At least one digit
+- At least one special character (`@$!%*?&`)
+
+Example valid password: `SecurePass123!`
+
+### JWT Details
+
+- **Algorithm**: HS512
+- **Expiration**: 24 hours
+- **Claims**: email, subject (email)
+- **Header**: `Authorization: Bearer <token>`
+
+### 2FA Features
+
+- **Email 2FA**: Auto-enabled after email verification; 6-digit codes valid for 10 minutes
+- **TOTP 2FA**: Optional; Google Authenticator compatible; 10 backup codes generated
+- **Backup Codes**: Single-use codes for account recovery
+
+---
+
+## 📦 Key Dependencies
+
+- **spring-boot-starter-web**: REST API framework
+- **spring-boot-starter-security**: Authentication & authorization
+- **spring-boot-starter-data-jpa**: Database ORM
+- **postgresql**: PostgreSQL JDBC driver
+- **jjwt**: JWT generation & validation
+- **lombok**: Boilerplate code reduction
+- **spring-boot-starter-mail**: Email sending
+- **spring-boot-starter-validation**: Bean validation
+- **spring-boot-starter-test**: Testing framework
+
+---
+
+## 🐛 Troubleshooting
+
+### Database Connection Issues
+
+**Symptom**: `Connection refused` or `database does not exist`
+
+**Solutions**:
+1. Verify PostgreSQL is running: `docker-compose ps`
+2. Check connection details in `application.yml`
+3. Manually create database: `docker exec -it user_registration_postgres psql -U postgres -c "CREATE DATABASE user_registration;"`
+
+### Emails Not Sending
+
+**Symptom**: `AuthenticationFailedException` or timeout
+
+**Solutions**:
+1. Verify SMTP credentials in `env.properties`
+2. Enable "Less secure app access" or use app-specific passwords (Gmail)
+3. Check firewall/network access to SMTP server
+4. Test with a different SMTP provider (e.g., Mailtrap for dev)
+
+### JWT Token Invalid
+
+**Symptom**: `401 Unauthorized` on protected endpoints
+
+**Solutions**:
+1. Verify token is included in `Authorization: Bearer <token>` header
+2. Check token hasn't expired (24-hour lifetime)
+3. Ensure `JWT_SECRET` matches between token generation and validation
+4. Verify token format: `eyJ...` (Base64 encoded JWT)
+
+### OAuth2 Redirect Mismatch
+
+**Symptom**: `redirect_uri_mismatch` error from OAuth provider
+
+**Solutions**:
+1. Verify redirect URI in `env.properties` matches OAuth2 provider console
+2. Ensure URI is exactly: `http://localhost:8080/api/auth/oauth2/callback/{provider}`
+3. Re-save settings in Google/GitHub OAuth console
+
+### Build Failures
+
+**Symptom**: `mvn` command not found or compilation errors
+
+**Solutions**:
+1. Use included Maven wrapper: `./mvnw` instead of `mvn`
+2. Verify Java 17 is installed: `java -version`
+3. Clean and rebuild: `./mvnw clean compile`
+
+---
+
+## 🧰 Development Tips
+
+### Lombok Setup
+
+This project uses Lombok to reduce boilerplate. Ensure your IDE has Lombok plugin installed:
+
+- **IntelliJ IDEA**: Install Lombok plugin + Enable annotation processing
+- **Eclipse**: Run `java -jar lombok.jar` installer
+- **VS Code**: Install "Lombok Annotations Support" extension
+
+### Hot Reload
+
+Spring Boot DevTools is included for automatic restarts during development. Simply save a file and the app will restart automatically.
+
+### Database GUI
+
+pgAdmin 4 is available via Docker Compose at http://localhost:5050:
+
+- **Email**: admin@admin.com
+- **Password**: admin
+
+Add server connection:
+- **Host**: postgres (or localhost if outside Docker)
+- **Port**: 5432
+- **Username**: postgres
+- **Password**: postgres
+- **Database**: user_registration
+
+---
+
+## 📝 Code Conventions
+
+### Lombok Annotations
+
+All DTOs, entities, and services use:
+
+- `@Data` — getters, setters, toString, equals, hashCode
+- `@Builder` — builder pattern
+- `@NoArgsConstructor`, `@AllArgsConstructor` — constructors
+- `@Slf4j` — logging
+
+### Dependency Injection
+
+Field injection with `@Autowired`:
+
+```java
+@Service
+@Slf4j
+public class UserService {
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private EmailService emailService;
+}
+```
+
+### Response Patterns
+
+- Success: `ResponseEntity.ok(MessageResponse.builder().message(...).success(true).build())`
+- Error: Custom `@ResponseStatus` exceptions caught by `GlobalExceptionHandler`
+- DTOs: Separate `*Request` and `*Response` classes for each endpoint
+
+---
+
+## 📄 License
+
+MIT
 > **Note:** the token value is trimmed before verification, so extra spaces are ignored.
 
 ```bash
@@ -219,93 +478,100 @@ Response (200 OK):
 #### Get Profile (Requires Authentication)
 ```bash
 GET /api/auth/profile
-Authorization: Bearer <jwt-token>
+<img src="https://img.shields.io/badge/backend-Spring%20Boot%203.2-green" alt="Spring Boot" />
 
-Response (200 OK):
-{
-  "id": 1,
-  "email": "user@example.com",
-  "fullName": "John Doe",
-  "isEmailVerified": true,
-  "oauth2Provider": null
-}
+# Backend — Spring Boot API
+
+REST API for registration, authentication, 2FA, OAuth2, and email notifications. Stateless JWT security, PostgreSQL 15, Hibernate ORM.
+
+---
+
+## Setup
+
+### Prerequisites
+- Java 17
+- PostgreSQL 15 (via Docker Compose)
+
+### 1. Configure Secrets
+Create `../env.properties` at project root:
+```
+JWT_SECRET=your_jwt_secret
+MAIL_USERNAME=your_email
+MAIL_PASSWORD=your_password
+OAUTH2_GOOGLE_CLIENT_ID=...
+OAUTH2_GOOGLE_CLIENT_SECRET=...
+# ...see schema in this file
 ```
 
-## Password Requirements
-
-Passwords must meet the following requirements:
-- Minimum 8 characters
-- At least one uppercase letter (A-Z)
-- At least one lowercase letter (a-z)
-- At least one digit (0-9)
-- At least one special character (@, $, !, %, *, ?, &)
-
-Example: `SecurePass123!`
-
-## Project Structure
-
+### 2. Start Database
+```bash
+- `jwt.expiration`: Token expiration time in milliseconds (default: 86400000 = 24 hours)
 ```
-backend/
-├── src/main/java/com/registration/
-│   ├── entity/
-│   │   ├── User.java
-│   │   ├── EmailVerificationToken.java
-│   │   └── PasswordResetToken.java
-│   ├── repository/
-│   │   ├── UserRepository.java
-│   │   ├── EmailVerificationTokenRepository.java
-│   │   └── PasswordResetTokenRepository.java
-│   ├── service/
-│   │   ├── UserService.java
-│   │   └── EmailService.java
-│   ├── controller/
-│   │   └── AuthController.java
-│   ├── dto/
-│   │   ├── RegistrationRequest.java
-│   │   ├── LoginRequest.java
-│   │   ├── UserResponse.java
-│   │   ├── AuthResponse.java
-│   │   ├── VerifyEmailRequest.java
-│   │   ├── ForgotPasswordRequest.java
-│   │   ├── ResetPasswordRequest.java
-│   │   └── MessageResponse.java
-│   ├── exception/
-│   │   ├── UserAlreadyExistsException.java
-│   │   ├── InvalidTokenException.java
-│   │   ├── UserNotFoundException.java
-│   │   ├── GlobalExceptionHandler.java
-│   │   ├── ErrorResponse.java
-│   │   └── ValidationErrorResponse.java
-│   └── config/
-│       ├── SecurityConfig.java
-│       ├── JwtTokenProvider.java
-│       ├── JwtAuthenticationFilter.java
-│       └── JwtAuthenticationEntryPoint.java
-├── src/main/resources/
-│   ├── application.yml
-│   └── schema.sql
-├── src/test/java/com/registration/
-└── pom.xml
+
+### 3. Run Backend
+```bash
+./mvnw spring-boot:run
 ```
+API: [http://localhost:8080/api](http://localhost:8080/api)
+
+---
 
 ## Configuration
 
-### Email Configuration
+- `application.yml`: Main config
+- `env.properties`: Secrets (imported)
+- `schema.sql`: DB schema
 
-The application uses Gmail SMTP by default. To enable email:
+---
 
-1. Create a Gmail account
-2. Enable 2-factor authentication
-3. Generate an app-specific password
-4. Set environment variables:
-   - `MAIL_USERNAME`: your-email@gmail.com
-   - `MAIL_PASSWORD`: generated-app-password
+## API Endpoints
 
-### JWT Configuration
+- `/api/auth/register` — Register
+- `/api/auth/login` — Login
+- `/api/auth/verify-email` — Email verification
+- `/api/auth/forgot-password` — Request reset
+- `/api/auth/reset-password` — Reset password
+- `/api/auth/oauth2/**` — OAuth2
+- `/api/auth/2fa/**` — 2FA
+- `/api/auth/profile` — Get profile (JWT)
+- `/api/auth/logout` — Logout
 
-JWT tokens expire after 24 hours. Configure in `application.yml`:
-- `jwt.secret`: 256-bit secret key
-- `jwt.expiration`: Token expiration time in milliseconds (default: 86400000 = 24 hours)
+See controller JavaDocs for details.
+
+---
+
+## Testing
+
+```bash
+./mvnw test
+```
+Unit: JUnit 5, Mockito, AssertJ  
+Integration: @SpringBootTest, MockMvc, H2
+
+---
+
+## Troubleshooting
+
+- **DB connection error**: Check Docker Compose, `env.properties`, and `application.yml`.
+- **Email not sent**: Check SMTP config in `env.properties`.
+- **OAuth2**: Ensure client secrets are set.
+
+---
+
+## Key Packages
+
+- `controller/` — REST endpoints
+- `service/` — Business logic
+- `repository/` — JPA
+- `dto/` — Request/response models
+- `entity/` — JPA entities
+- `exception/` — Custom exceptions
+
+---
+
+## License
+
+MIT
 
 ## Security Considerations
 
