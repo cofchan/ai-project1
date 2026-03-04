@@ -193,4 +193,41 @@ public class EmailService {
             throw new RuntimeException("Failed to send 2FA login code email", e);
         }
     }
+
+    /**
+     * Send login notification email after successful authentication
+     */
+    public void sendLoginNotificationEmail(User user) {
+        try {
+            String passwordResetUrl = frontendUrl + "/forgot-password";
+            String htmlContent = buildLoginNotificationEmailContent(user.getFullName(), passwordResetUrl);
+
+            if (mailSender != null) {
+                SimpleMailMessage message = new SimpleMailMessage();
+                message.setFrom(fromEmail);
+                message.setTo(user.getEmail());
+                message.setSubject("Login Notification - User Registration System");
+                message.setText(htmlContent);
+
+                mailSender.send(message);
+                log.info("Login notification email sent successfully to: {}", user.getEmail());
+            } else {
+                log.warn("Mail sender not configured. Login notification email not sent to: {}", user.getEmail());
+            }
+        } catch (Exception e) {
+            log.error("Failed to send login notification email to: {}", user.getEmail(), e);
+            // Don't throw exception here, log and continue - failed email shouldn't break login
+            log.warn("Continuing after failed login notification email");
+        }
+    }
+
+    /**
+     * Build login notification email content
+     */
+    private String buildLoginNotificationEmailContent(String fullName, String passwordResetUrl) {
+        String template = loadTemplate("login_notification_email.txt");
+        return template
+                .replace("{{fullName}}", fullName)
+                .replace("{{passwordResetUrl}}", passwordResetUrl);
+    }
 }

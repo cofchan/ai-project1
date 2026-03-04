@@ -34,7 +34,7 @@
           </button>
         </div>
         <p class="text-xs text-gray-500 mt-1">
-          Min 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special char (@$!%*?&)
+          {{ $t('passwordRulesText') }}
         </p>
         <p v-if="errors.newPassword" class="form-error">{{ errors.newPassword }}</p>
       </div>

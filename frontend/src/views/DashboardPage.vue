@@ -1,28 +1,28 @@
 <template>
   <div class="max-w-4xl mx-auto">
     <div class="card">
-      <h2 class="text-3xl font-bold mb-6 text-gray-800">Dashboard</h2>
+      <h2 class="text-3xl font-bold mb-6 text-gray-800">{{ $t('dashboard') }}</h2>
 
       <!-- User Profile Section -->
       <div v-if="user" class="space-y-6">
         <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-          <h3 class="font-semibold text-blue-900 mb-4">Profile Information</h3>
+          <h3 class="font-semibold text-blue-900 mb-4">{{ $t('profileInformation') }}</h3>
           <div class="space-y-4">
             <div class="bg-white p-3 rounded-lg">
-              <p class="text-sm text-gray-600">Email</p>
+              <p class="text-sm text-gray-600">{{ $t('emailLabel') }}</p>
               <p class="text-lg font-semibold text-gray-800">{{ user.email }}</p>
             </div>
             <div class="bg-white p-3 rounded-lg">
-              <p class="text-sm text-gray-600">Full Name</p>
+              <p class="text-sm text-gray-600">{{ $t('fullNameLabel') }}</p>
               <p class="text-lg font-semibold text-gray-800">
-                {{ user.fullName || 'Not set' }}
+                {{ user.fullName || $t('notSet') }}
               </p>
             </div>
             <div class="bg-white p-3 rounded-lg">
-              <p class="text-sm text-gray-600">Email Verified</p>
+              <p class="text-sm text-gray-600">{{ $t('emailVerifiedLabel') }}</p>
               <p class="text-lg font-semibold">
-                <span v-if="user.isEmailVerified" class="text-green-600">✓ Verified</span>
-                <span v-else class="text-yellow-600">⚠ Not verified</span>
+                <span v-if="user.isEmailVerified" class="text-green-600">{{ $t('emailVerified') }}</span>
+                <span v-else class="text-yellow-600">{{ $t('emailNotVerified') }}</span>
               </p>
             </div>
           </div>
@@ -30,16 +30,16 @@
 
         <!-- Security Section -->
         <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
-          <h3 class="font-semibold text-purple-900 mb-4">Security Settings</h3>
+          <h3 class="font-semibold text-purple-900 mb-4">{{ $t('securitySettings') }}</h3>
           <div v-if="!show2FASetup" class="space-y-3">
             <div class="bg-white p-3 rounded-lg flex justify-between items-center">
               <div>
-                <p class="font-semibold text-gray-800">Two-Factor Authentication (2FA)</p>
+                <p class="font-semibold text-gray-800">{{ $t('twoFADescription') }}</p>
                 <p class="text-sm text-gray-600 mt-1">
                   {{
                     user.isTwoFAEnabled
-                      ? 'Enabled - Your account is protected'
-                      : 'Disabled - Add an extra layer of security'
+                      ? $t('twoFAEnabled')
+                      : $t('twoFADisabled')
                   }}
                 </p>
               </div>
@@ -48,14 +48,14 @@
                 @click="show2FASetup = true"
                 class="btn btn-primary"
               >
-                Enable 2FA
+                {{ $t('enableTwoFA') }}
               </button>
               <button
                 v-else
                 @click="prepareDisable2FA"
                 class="btn btn-outline text-red-600 border-red-300 hover:bg-red-50"
               >
-                Disable 2FA
+                {{ $t('disableTwoFA') }}
               </button>
             </div>
           </div>

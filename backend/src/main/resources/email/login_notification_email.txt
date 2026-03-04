@@ -1,0 +1,9 @@
+Hello {{fullName}},
+
+You have successfully logged into your account.
+
+If this login was not made by you, please reset your password immediately by visiting:
+{{passwordResetUrl}}
+
+Best regards,
+User Registration System

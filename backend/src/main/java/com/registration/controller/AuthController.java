@@ -2,6 +2,7 @@ package com.registration.controller;
 
 import com.registration.dto.*;
 import com.registration.entity.User;
+import com.registration.service.EmailService;
 import com.registration.service.TwoFactorAuthenticationService;
 import com.registration.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,9 @@ public class AuthController {
 
     @Autowired
     private TwoFactorAuthenticationService twoFAService;
+
+    @Autowired
+    private EmailService emailService;
 
     /**
      * Register a new user
@@ -70,6 +74,11 @@ public class AuthController {
             response.setRequiresTwoFA(true);
             response.setToken(null); // Don't send token until 2FA is verified
             response.setMessage("2FA verification required; code sent to your email");
+        } else {
+            // Send login notification email for users without 2FA
+            if (user != null) {
+                emailService.sendLoginNotificationEmail(user);
+            }
         }
         
         return ResponseEntity.ok(response);
@@ -185,6 +194,13 @@ public class AuthController {
     public ResponseEntity<?> verifyTwoFACode(@Valid @RequestBody TwoFALoginRequest request) {
         log.info("Verifying 2FA code for: {}", request.getEmail());
         AuthResponse response = userService.authenticateWith2FA(request.getEmail(), request.getCode());
+        
+        // Send login notification email after successful 2FA verification
+        User user = userService.findUserByEmail(request.getEmail());
+        if (user != null) {
+            emailService.sendLoginNotificationEmail(user);
+        }
+        
         return ResponseEntity.ok(response);
     }
 
@@ -215,6 +231,13 @@ public class AuthController {
     public ResponseEntity<?> verifyBackupCode(@Valid @RequestBody TwoFALoginRequest request) {
         log.info("Verifying backup code for: {}", request.getEmail());
         AuthResponse response = userService.authenticateWithBackupCode(request.getEmail(), request.getCode());
+        
+        // Send login notification email after successful backup code verification
+        User user = userService.findUserByEmail(request.getEmail());
+        if (user != null) {
+            emailService.sendLoginNotificationEmail(user);
+        }
+        
         return ResponseEntity.ok(response);
     }
 

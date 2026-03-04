@@ -9,7 +9,7 @@
           @click="redirectToOAuth('google')"
         >
           <span><img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google" width="20" /></span>
-          Sign in with Google
+          {{ $t('signInWithGoogle') }}
         </button>
         <button
           type="button"
@@ -17,17 +17,17 @@
           @click="redirectToOAuth('github')"
         >
           <span><img src="https://www.svgrepo.com/show/349419/github.svg" alt="GitHub" width="20" /></span>
-          Sign in with GitHub
+          {{ $t('signInWithGithub') }}
         </button>
       </div>
 
       <div class="relative my-4">
         <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-300"></div></div>
-        <div class="relative flex justify-center text-sm"><span class="px-2 bg-white text-gray-500">{{ $t('orContinueWith') || 'or continue with email' }}</span></div>
+        <div class="relative flex justify-center text-sm"><span class="px-2 bg-white text-gray-500">{{ $t('orContinueWith') }}</span></div>
       </div>
 
       <div>
-        <label for="email" class="form-label">{{ $t('email') }}</label>
+        <label for="email" class="form-label">{{ $t('emailAddress') }}</label>
         <input
           id="email"
           v-model="form.email"
@@ -172,26 +172,26 @@
           class="btn btn-primary flex-1"
           :disabled="authStore.loading"
         >
-          {{ authStore.loading ? 'Verifying...' : 'Verify Code' }}
+          {{ authStore.loading ? $t('verifying') : $t('verify') }}
         </button>
         <button
           type="button"
           @click="backToTwoFA"
           class="btn btn-outline flex-1"
         >
-          Back to 2FA
+          {{ $t('backTo2FA') }}
         </button>
       </div>
     </form>
 
     <div v-if="!show2FAInput && !showBackupCodeInput" class="flex flex-col gap-2 mt-4">
       <router-link to="/forgot-password" class="text-sm text-blue-600 hover:underline">
-        Forgot Password?
+        {{ $t('forgotPassword') }}
       </router-link>
       <p class="text-center text-sm text-gray-600">
-        Don't have an account?
+        {{ $t('dontHaveAccount') }}
         <router-link to="/register" class="text-blue-600 hover:underline">
-          Sign Up
+          {{ $t('register') }}
         </router-link>
       </p>
     </div>
