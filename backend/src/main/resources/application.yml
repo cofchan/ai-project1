@@ -87,6 +87,9 @@ jwt:
   secret: ${JWT_SECRET:your-secret-key-change-in-production-must-be-at-least-256-bits}
   expiration: 86400000 # 24 hours in milliseconds
 
+captcha:
+  secret: ${CAPTCHA_SECRET:change-this-captcha-secret-in-production}
+
 app:
   name: User Registration System
   email-verification-expiry-hours: 24

@@ -43,6 +43,10 @@ export default {
     return apiClient.post('/login', data)
   },
 
+  getCaptcha() {
+    return apiClient.get('/captcha')
+  },
+
   verifyEmail(data) {
     return apiClient.post('/verify-email', data)
   },

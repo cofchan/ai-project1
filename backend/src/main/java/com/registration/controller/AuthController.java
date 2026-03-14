@@ -2,6 +2,7 @@ package com.registration.controller;
 
 import com.registration.dto.*;
 import com.registration.entity.User;
+import com.registration.service.CaptchaService;
 import com.registration.service.EmailService;
 import com.registration.service.TwoFactorAuthenticationService;
 import com.registration.service.UserService;
@@ -20,7 +21,7 @@ import java.util.Base64;
 @RequestMapping("/auth")
 @Validated
 @Slf4j
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000"})
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000", "http://localhost:5174", "http://localhost:5175"})
 public class AuthController {
 
     @Autowired
@@ -32,12 +33,28 @@ public class AuthController {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private CaptchaService captchaService;
+
     /**
      * Register a new user
      */
+    @GetMapping("/captcha")
+    public ResponseEntity<CaptchaResponse> getCaptcha() {
+        CaptchaService.Challenge challenge = captchaService.generateChallenge();
+        return ResponseEntity.ok(CaptchaResponse.builder()
+                .captchaToken(challenge.captchaToken())
+                .captchaQuestion(challenge.captchaQuestion())
+                .build());
+    }
+
     @PostMapping("/register")
-    public ResponseEntity<RegistrationResponse> register(@Valid @RequestBody RegistrationRequest request) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegistrationRequest request) {
         log.info("Register endpoint called for email: {}", request.getEmail());
+        if (!captchaService.verify(request.getCaptchaToken(), request.getCaptchaAnswer())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(MessageResponse.builder().message("CAPTCHA verification failed").success(false).build());
+        }
         RegistrationResponse response = userService.registerUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -58,7 +75,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         log.info("Login endpoint called for email: {}", request.getEmail());
-        
+
+        if (!captchaService.verify(request.getCaptchaToken(), request.getCaptchaAnswer())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(MessageResponse.builder().message("CAPTCHA verification failed").success(false).build());
+        }
+
         // First authenticate the user with credentials
         AuthResponse response = userService.authenticate(request.getEmail(), request.getPassword());
         

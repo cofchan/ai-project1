@@ -30,4 +30,7 @@ public class RegistrationRequest {
     @NotBlank(message = "Full name is required")
     @Size(min = 2, max = 255, message = "Full name should be between 2 and 255 characters")
     private String fullName;
+
+    private String captchaToken;
+    private String captchaAnswer;
 }

@@ -4,6 +4,7 @@ import com.registration.entity.User;
 import com.registration.repository.UserRepository;
 import com.registration.repository.EmailVerificationTokenRepository;
 import com.registration.entity.EmailVerificationToken;
+import com.registration.service.CaptchaService;
 import com.registration.service.TwoFactorAuthenticationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,15 @@ class AuthControllerIntegrationTest {
         public org.springframework.mail.javamail.JavaMailSender mailSender() {
             // simple Mockito stub that does nothing when send() is called
             return Mockito.mock(org.springframework.mail.javamail.JavaMailSender.class);
+        }
+
+        @org.springframework.context.annotation.Bean
+        @org.springframework.context.annotation.Primary
+        public CaptchaService captchaService() {
+            // always pass CAPTCHA in tests
+            CaptchaService mock = Mockito.mock(CaptchaService.class);
+            Mockito.when(mock.verify(Mockito.any(), Mockito.any())).thenReturn(true);
+            return mock;
         }
     }
 

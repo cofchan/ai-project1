@@ -56,6 +56,12 @@
         <p v-if="errors.passwordConfirm" class="form-error">{{ errors.passwordConfirm }}</p>
       </div>
 
+      <CaptchaWidget
+        ref="registerCaptchaRef"
+        @change="onCaptchaChange"
+      />
+      <p v-if="errors.captcha" class="form-error">{{ errors.captcha }}</p>
+
       <p v-if="authStore.error" class="form-error bg-red-50 p-3 rounded">
         {{ authStore.error }}
       </p>
@@ -79,41 +85,56 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue'
+import { defineComponent, ref } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useRouter } from 'vue-router'
+import RecaptchaWidget from './RecaptchaWidget.vue'
+import CaptchaWidget from './CaptchaWidget.vue'
 
 export default defineComponent({
   name: 'RegistrationForm',
+  components: { RecaptchaWidget, CaptchaWidget },
   setup() {
     const authStore = useAuthStore()
     const router = useRouter()
+    const registerCaptchaRef = ref(null)
+    const captchaData = ref({ captchaToken: '', captchaAnswer: '' })
 
-    const form = {
+    const form = ref({
       email: '',
       password: '',
       passwordConfirm: '',
       fullName: '',
-    }
+    })
 
-    const errors = {
+    const errors = ref({
       email: '',
       password: '',
       passwordConfirm: '',
       fullName: '',
+      captcha: '',
+    })
+
+    const onCaptchaChange = (data) => {
+      captchaData.value = data
+      errors.value.captcha = ''
     }
 
     const validateForm = () => {
-      errors.email = !form.email ? $t('errorEmailRequired') || 'Email is required' : ''
-      errors.password = !form.password ? $t('errorPasswordRequired') || 'Password is required' : ''
-      errors.passwordConfirm = !form.passwordConfirm ? $t('errorPasswordConfirmRequired') || 'Password confirmation is required' : ''
-      errors.fullName = !form.fullName ? $t('errorFullNameRequired') || 'Full name is required' : ''
+      errors.value.email = !form.value.email ? 'Email is required' : ''
+      errors.value.password = !form.value.password ? 'Password is required' : ''
+      errors.value.passwordConfirm = !form.value.passwordConfirm ? 'Password confirmation is required' : ''
+      errors.value.fullName = !form.value.fullName ? 'Full name is required' : ''
 
-      if (form.password !== form.passwordConfirm) {
-        errors.passwordConfirm = $t('errorPasswordsMismatch') || 'Passwords do not match'
+      if (form.value.password !== form.value.passwordConfirm) {
+        errors.value.passwordConfirm = 'Passwords do not match'
       }
 
-      return !Object.values(errors).some(e => e)
+      if (!captchaData.value.captchaToken || !captchaData.value.captchaAnswer) {
+        errors.value.captcha = 'Please complete the CAPTCHA'
+      }
+
+      return !Object.values(errors.value).some(e => e)
     }
 
     const handleRegister = async () => {
@@ -121,10 +142,12 @@ export default defineComponent({
 
       try {
         await authStore.register({
-          email: form.email,
-          password: form.password,
-          passwordConfirm: form.passwordConfirm,
-          fullName: form.fullName,
+          email: form.value.email,
+          password: form.value.password,
+          passwordConfirm: form.value.passwordConfirm,
+          fullName: form.value.fullName,
+          captchaToken: captchaData.value.captchaToken,
+          captchaAnswer: captchaData.value.captchaAnswer,
         })
 
         // Redirect to email verification
@@ -133,6 +156,7 @@ export default defineComponent({
         }, 1000)
       } catch (error) {
         // Error is handled by the store
+        registerCaptchaRef.value?.refresh()
       }
     }
 
@@ -141,6 +165,8 @@ export default defineComponent({
       errors,
       authStore,
       handleRegister,
+      registerCaptchaRef,
+      onCaptchaChange,
     }
   },
 })

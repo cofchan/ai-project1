@@ -100,9 +100,9 @@ public class EmailService {
     private String buildVerificationEmailContent(String fullName, String verificationUrl, String token) {
         String template = loadTemplate("verification_email.txt");
         return template
-                .replace("{{fullName}}", fullName)
-                .replace("{{verificationUrl}}", verificationUrl)
-                .replace("{{token}}", token);
+                .replace("{{fullName}}", fullName != null ? fullName : "")
+                .replace("{{verificationUrl}}", verificationUrl != null ? verificationUrl : "")
+                .replace("{{token}}", token != null ? token : "");
     }
 
     /**
@@ -111,9 +111,9 @@ public class EmailService {
     private String buildPasswordResetEmailContent(String fullName, String resetUrl, String token) {
         String template = loadTemplate("password_reset_email.txt");
         return template
-                .replace("{{fullName}}", fullName)
-                .replace("{{resetUrl}}", resetUrl)
-                .replace("{{token}}", token);
+                .replace("{{fullName}}", fullName != null ? fullName : "")
+                .replace("{{resetUrl}}", resetUrl != null ? resetUrl : "")
+                .replace("{{token}}", token != null ? token : "");
     }
 
         /**
@@ -227,7 +227,7 @@ public class EmailService {
     private String buildLoginNotificationEmailContent(String fullName, String passwordResetUrl) {
         String template = loadTemplate("login_notification_email.txt");
         return template
-                .replace("{{fullName}}", fullName)
-                .replace("{{passwordResetUrl}}", passwordResetUrl);
+                .replace("{{fullName}}", fullName != null ? fullName : "")
+                .replace("{{passwordResetUrl}}", passwordResetUrl != null ? passwordResetUrl : "");
     }
 }

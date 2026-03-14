@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Canvas Test</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        canvas { border: 2px solid red; display: block; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h2>Testing Canvas Text Rendering</h2>
+    <canvas id="canvas" width="160" height="56"></canvas>
+    <p>Check if 4 characters are visible above (should be dark text on light background)</p>
+
+    <script>
+        const W = 160
+        const H = 56
+        const code = "ABC2"
+
+        function rnd(min, max) {
+            return Math.random() * (max - min) + min
+        }
+
+        function drawCaptcha(canvas, code) {
+            if (!canvas || !code) {
+                console.log('Canvas or code missing')
+                return
+            }
+            
+            const ctx = canvas.getContext('2d')
+            if (!ctx) {
+                console.log('Could not get canvas context')
+                return
+            }
+
+            // Background
+            ctx.fillStyle = '#f3f4f6'
+            ctx.fillRect(0, 0, W, H)
+
+            // Background noise dots
+            for (let i = 0; i < 100; i++) {
+                ctx.beginPath()
+                ctx.arc(rnd(0, W), rnd(0, H), rnd(0.5, 1.5), 0, Math.PI * 2)
+                ctx.fillStyle = `rgba(${~~rnd(100,180)},${~~rnd(100,180)},${~~rnd(100,180)},${rnd(0.2,0.4)})`
+                ctx.fill()
+            }
+
+            // Interference lines
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath()
+                ctx.moveTo(rnd(0, W * 0.3), rnd(0, H))
+                ctx.bezierCurveTo(
+                    rnd(0, W), rnd(0, H),
+                    rnd(0, W), rnd(0, H),
+                    rnd(W * 0.7, W), rnd(0, H)
+                )
+                ctx.strokeStyle = `rgba(${~~rnd(100,160)},${~~rnd(100,160)},${~~rnd(100,160)},${rnd(0.3,0.5)})`
+                ctx.lineWidth = rnd(1, 2)
+                ctx.stroke()
+            }
+
+            // Draw each character
+            const charW = W / code.length
+            for (let i = 0; i < code.length; i++) {
+                ctx.save()
+                const cx = charW * i + charW / 2
+                const cy = H / 2
+                ctx.translate(cx, cy)
+                ctx.rotate(rnd(-0.3, 0.3))
+
+                const size = 28
+                ctx.font = `bold ${size}px Arial, sans-serif`
+                ctx.textAlign = 'center'
+                ctx.textBaseline = 'middle'
+
+                // Dark color for high contrast
+                ctx.fillStyle = '#1a1a1a'
+                console.log(`Drawing character ${i}: "${code[i]}" with fillStyle ${ctx.fillStyle}`)
+                ctx.fillText(code[i], 0, 0)
+                ctx.restore()
+            }
+        }
+
+        // Test it
+        const canvas = document.getElementById('canvas')
+        console.log('Canvas element:', canvas)
+        console.log('Code to draw:', code)
+        drawCaptcha(canvas, code)
+    </script>
+</body>
+</html>

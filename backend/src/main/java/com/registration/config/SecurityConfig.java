@@ -57,6 +57,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/auth/oauth2/**").permitAll()
                         // two-factor endpoints must also be public so the second step can execute
                         .requestMatchers(HttpMethod.POST, "/auth/2fa/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/auth/captcha").permitAll()
 
                         // Protected endpoints
                         .requestMatchers(HttpMethod.GET, "/auth/profile").authenticated()

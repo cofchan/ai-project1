@@ -8,7 +8,7 @@
           class="btn btn-primary w-full flex items-center justify-center gap-2"
           @click="redirectToOAuth('google')"
         >
-          <span><img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google" width="20" /></span>
+          <span>🔍</span>
           {{ $t('signInWithGoogle') }}
         </button>
         <button
@@ -16,7 +16,7 @@
           class="btn btn-outline w-full flex items-center justify-center gap-2"
           @click="redirectToOAuth('github')"
         >
-          <span><img src="https://www.svgrepo.com/show/349419/github.svg" alt="GitHub" width="20" /></span>
+          <span>💻</span>
           {{ $t('signInWithGithub') }}
         </button>
       </div>
@@ -51,6 +51,12 @@
         />
         <p v-if="errors.password" class="form-error">{{ errors.password }}</p>
       </div>
+
+      <CaptchaWidget
+        ref="loginCaptchaRef"
+        @change="onCaptchaChange"
+      />
+      <p v-if="errors.captcha" class="form-error">{{ errors.captcha }}</p>
 
       <p v-if="authStore.error" class="form-error bg-red-50 p-3 rounded">
         {{ authStore.error }}
@@ -202,9 +208,12 @@
 import { defineComponent, ref, nextTick, watch } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useRouter } from 'vue-router'
+import RecaptchaWidget from './RecaptchaWidget.vue'
+import CaptchaWidget from './CaptchaWidget.vue'
 
 export default defineComponent({
   name: 'LoginForm',
+  components: { RecaptchaWidget, CaptchaWidget },
   setup() {
     const authStore = useAuthStore()
     const router = useRouter()
@@ -215,17 +224,27 @@ export default defineComponent({
     // input refs for managing focus
     const twoFACodeRef = ref(null)
     const backupCodeRef = ref(null)
+    const loginCaptchaRef = ref(null)
+    const captchaData = ref({ captchaToken: '', captchaAnswer: '' })
 
     const form = ref({ email: '', password: '' })
-    const errors = ref({ email: '', password: '', twoFACode: '', backupCode: '' })
+    const errors = ref({ email: '', password: '', twoFACode: '', backupCode: '', captcha: '' })
 
     // remember credentials so we can resend code
     const storedCredentials = ref({ email: '', password: '' })
 
+    const onCaptchaChange = (data) => {
+      captchaData.value = data
+      errors.value.captcha = ''
+    }
+
     const validateLoginForm = () => {
       errors.value.email = !form.value.email ? 'Email is required' : ''
       errors.value.password = !form.value.password ? 'Password is required' : ''
-      return !Object.values({ email: errors.value.email, password: errors.value.password }).some(e => e)
+      if (!captchaData.value.captchaToken || !captchaData.value.captchaAnswer) {
+        errors.value.captcha = 'Please complete the CAPTCHA'
+      }
+      return !Object.values({ email: errors.value.email, password: errors.value.password, captcha: errors.value.captcha }).some(e => e)
     }
 
     const handleLogin = async () => {
@@ -235,6 +254,8 @@ export default defineComponent({
         const response = await authStore.login({
           email: form.value.email,
           password: form.value.password,
+          captchaToken: captchaData.value.captchaToken,
+          captchaAnswer: captchaData.value.captchaAnswer,
         })
 
         // If 2FA is required, show 2FA input
@@ -250,6 +271,7 @@ export default defineComponent({
         }
       } catch (error) {
         // Error is handled by the store
+        loginCaptchaRef.value?.refresh()
       }
     }
 
@@ -372,6 +394,7 @@ export default defineComponent({
       backupCode,
       twoFACodeRef,
       backupCodeRef,
+      loginCaptchaRef,
       redirectToOAuth,
       handleLogin,
       handleTwoFAVerify,
@@ -380,6 +403,7 @@ export default defineComponent({
       handleBackupCodeVerify,
       resendCode,
       clearFieldError,
+      onCaptchaChange,
     }
   },
 })
